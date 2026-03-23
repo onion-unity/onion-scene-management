@@ -1,0 +1,15 @@
+{
+  "name": "com.onion.template",
+  "version": "1.0.0",
+  "displayName": "Onion Template Package",
+  "description": "",
+  "unity": "6000.0",
+  "author": {
+    "name": "Seungbin"
+  },
+  "hideInEditor": false,
+  "repository": {
+    "url": "",
+    "type": "git"
+  }
+}
