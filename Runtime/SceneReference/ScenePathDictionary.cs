@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
+
 
 #if UNITY_EDITOR
 using Onion.SceneManagement.Editor;
@@ -21,6 +23,7 @@ namespace Onion.SceneManagement {
 
         private static Dictionary<string, string> _guidToPath = null;
         private static Dictionary<string, string> _pathToGuid = null;
+        private static Dictionary<string, string> _nameToGuid = null;
 
         internal static IReadOnlyDictionary<string, string> guidToPath {
             get {
@@ -36,13 +39,20 @@ namespace Onion.SceneManagement {
             }
         }
 
+        internal static IReadOnlyDictionary<string, string> nameToGuid {
+            get {
+                EnsureInitialized();
+                return _nameToGuid;
+            }
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Initialize() {
             EnsureInitialized();
         }
 
         private static void EnsureInitialized() {
-            if (_guidToPath != null && _pathToGuid != null) {
+            if (_guidToPath != null && _pathToGuid != null && _nameToGuid != null) {
                 return;
             }
 
@@ -58,11 +68,8 @@ namespace Onion.SceneManagement {
         }
 
         public static void LoadFromTable(Table table) {
-            _guidToPath ??= new();
-            _pathToGuid ??= new();
-
-            _guidToPath.Clear();
-            _pathToGuid.Clear();
+            _guidToPath ??= new(); _pathToGuid ??= new(); _nameToGuid ??= new();
+            _guidToPath.Clear(); _pathToGuid.Clear(); _nameToGuid.Clear();
 
             if (table == null || table.entries == null) {
                 return;
@@ -70,10 +77,19 @@ namespace Onion.SceneManagement {
 
             _guidToPath.EnsureCapacity(table.entries.Count);
             _pathToGuid.EnsureCapacity(table.entries.Count);
+            _nameToGuid.EnsureCapacity(table.entries.Count);
 
             foreach (var entry in table.entries) {
                 _guidToPath[entry.guid] = entry.path;
                 _pathToGuid[entry.path] = entry.guid;
+
+                var name = Path.GetFileNameWithoutExtension(entry.path);
+                if (_nameToGuid.ContainsKey(name)) {
+                    Debug.LogWarning($"Duplicate scene name detected: {name}.");
+                    continue;
+                }
+
+                _nameToGuid[name] = entry.guid;
             }
         }
 

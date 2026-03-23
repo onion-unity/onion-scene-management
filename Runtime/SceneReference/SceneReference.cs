@@ -74,6 +74,52 @@ namespace Onion.SceneManagement {
         }
 #endif
 
+        public static SceneReference FromPath(string path) {
+            if (!ScenePathDictionary.pathToGuid.TryGetValue(path, out var guid)) {
+                throw new InvalidOperationException($"Scene with path '{path}' not found.");
+            }
+
+            return new(guid);
+        }
+
+        public static SceneReference FromAddress(string address) {
+#if ONION_ADDRESSABLES
+            if (!SceneAddressDictionary.addressToGuid.TryGetValue(address, out var guid)) {
+                throw new InvalidOperationException($"Scene with address '{address}' not found.");
+            }
+
+            return new(guid);
+#else
+            throw new NotSupportedException("SceneReference.FromAddress is not supported because the addressable integration is not enabled.");
+#endif
+        }
+
+        public static SceneReference FromName(string name) {
+            if (!ScenePathDictionary.nameToGuid.TryGetValue(name, out var guid)) {
+                throw new InvalidOperationException($"Scene with name '{name}' not found.");
+            }
+
+            return new(guid);
+        }
+
+        public static SceneReference FromBuildIndex(int buildIndex) {
+            var path = SceneUtility.GetScenePathByBuildIndex(buildIndex);
+
+            if (string.IsNullOrEmpty(path)) {
+                throw new InvalidOperationException($"Scene with build index '{buildIndex}' not found.");
+            }
+
+            return FromPath(path);
+        }
+
+        public static SceneReference FromScene(Scene scene) {
+            if (!scene.IsValid()) {
+                throw new InvalidOperationException("Scene is not valid.");
+            }
+
+            return FromPath(scene.path);
+        }
+
         public void OnBeforeSerialize() {
 #if UNITY_EDITOR
             if (_asset != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(_asset, out var guid, out _)) {
