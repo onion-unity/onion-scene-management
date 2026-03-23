@@ -2,7 +2,9 @@
     "name": "Onion.SceneManagement.Editor",
     "rootNamespace": "Onion",
     "references": [
-        "Onion.SceneManagement.Runtime"
+        "Onion.SceneManagement.Runtime",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor"
     ],
     "includePlatforms": [
         "Editor"
@@ -13,6 +15,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "ONION_ADDRESSABLES"
+        }
+    ],
     "noEngineReferences": false
 }
