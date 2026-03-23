@@ -1,15 +1,15 @@
 {
-  "name": "com.onion.template",
+  "name": "com.onion.scenemanagement",
   "version": "1.0.0",
-  "displayName": "Onion Template Package",
-  "description": "",
+  "displayName": "Onion Scene Management",
+  "description": "Scene management system for Unity.",
   "unity": "6000.0",
   "author": {
     "name": "Seungbin"
   },
   "hideInEditor": false,
   "repository": {
-    "url": "",
+    "url": "https://github.com/onion-unity/onion-scene-management.git",
     "type": "git"
   }
 }

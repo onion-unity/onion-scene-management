@@ -1,8 +1,8 @@
 {
-    "name": "Onion.Template.Editor",
+    "name": "Onion.SceneManagement.Editor",
     "rootNamespace": "Onion",
     "references": [
-        "Onion.Template.Runtime"
+        "Onion.SceneManagement.Runtime"
     ],
     "includePlatforms": [
         "Editor"

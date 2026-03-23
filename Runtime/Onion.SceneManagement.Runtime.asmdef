@@ -1,5 +1,5 @@
 {
-    "name": "Onion.Template.Runtime",
+    "name": "Onion.SceneManagement.Runtime",
     "rootNamespace": "Onion",
     "references": [],
     "includePlatforms": [],
