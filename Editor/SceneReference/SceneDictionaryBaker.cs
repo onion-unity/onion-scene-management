@@ -79,11 +79,13 @@ namespace Onion.SceneManagement.Editor {
         }
 
         private static void DeleteAssetIfExists(UnityPath path) {
-            if (!File.Exists(path.platformPath)) {
-                return;
+            if (File.Exists(path.platformPath)) {
+                File.Delete(path.platformPath);
             }
 
-            AssetDatabase.DeleteAsset(path);
+            if (File.Exists(path.metaPath)) {
+                File.Delete(path.metaPath);
+            }
         }
     }
 }
