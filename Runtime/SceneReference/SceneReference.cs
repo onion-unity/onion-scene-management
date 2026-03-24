@@ -31,6 +31,45 @@ namespace Onion.SceneManagement {
                 return path;
             }
         }
+
+        public string address {
+            get {
+#if ONION_ADDRESSABLES
+                if (!IsValidGuid()) {
+                    throw new InvalidOperationException("SceneReference does not contain a valid GUID.");
+                }
+
+                if (!ScenePathDictionary.guidToPath.ContainsKey(guid)) {
+                    throw new InvalidOperationException($"Scene with GUID '{guid}' not found in the scene dictionary.");
+                }
+
+                if (!SceneAddressDictionary.guidToAddress.TryGetValue(guid, out var address)) {
+                    throw new InvalidOperationException($"Scene with GUID '{guid}' not found in the address dictionary.");
+                }
+
+                return address;
+#else
+                throw new NotSupportedException("SceneReference.address is not supported.");
+#endif
+            }
+        }
+
+        public SceneReferenceType type {
+            get {
+                if (IsValidGuid()) {
+#if ONION_ADDRESSABLES
+                    if (SceneAddressDictionary.guidToAddress.ContainsKey(guid)) {
+                        return SceneReferenceType.Addressable;
+                    }
+#endif
+                    if (ScenePathDictionary.guidToPath.ContainsKey(guid) && buildIndex != -1) {
+                        return SceneReferenceType.BuiltIn;
+                    }
+                }
+                return SceneReferenceType.None;
+            }
+        }
+
         public int buildIndex => SceneUtility.GetBuildIndexByScenePath(path);
         public string name => System.IO.Path.GetFileNameWithoutExtension(path);
         public Scene scene => SceneManager.GetSceneByPath(path);

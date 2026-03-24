@@ -16,7 +16,7 @@ namespace Onion.SceneManagement {
 
         [Serializable]
         internal class Table {
-            public List<Entry> entries;
+            public List<Entry> entries = new();
         }
 
         private static Dictionary<string, string> _guidToAddress;
