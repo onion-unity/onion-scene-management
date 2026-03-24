@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Onion.SceneManagement.Editor {
     [CustomPropertyDrawer(typeof(SceneReference))]
-    public class SceneReferenceDrawer : PropertyDrawer {
+    internal sealed class SceneReferenceDrawer : PropertyDrawer {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);
 

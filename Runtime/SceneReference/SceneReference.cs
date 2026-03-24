@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,12 +11,12 @@ namespace Onion.SceneManagement {
 
 #if UNITY_EDITOR
         [SerializeField] 
-        private SceneAsset _asset = null;
+        internal SceneAsset _asset = null;
 #endif
 
         [SerializeField] 
         [HideInInspector]
-        private string _guid = null;
+        internal string _guid = null;
         internal string guid => GetSafeGuid(_guid);
         
         public string path {
@@ -71,8 +72,9 @@ namespace Onion.SceneManagement {
         }
 
         public int buildIndex => SceneUtility.GetBuildIndexByScenePath(path);
-        public string name => System.IO.Path.GetFileNameWithoutExtension(path);
-        public Scene scene => SceneManager.GetSceneByPath(path);
+        public string name => Path.GetFileNameWithoutExtension(path);
+        public Scene scene => UnityEngine.SceneManagement.SceneManager.GetSceneByPath(path);
+        public bool isLoaded => scene.IsValid() && scene.isLoaded;
 
         private bool IsValidGuid() => guid != defaultGuid;
         private string GetSafeGuid(string guid) {
