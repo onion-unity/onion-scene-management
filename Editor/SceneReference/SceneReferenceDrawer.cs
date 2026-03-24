@@ -6,10 +6,20 @@ namespace Onion.SceneManagement.Editor {
     internal sealed class SceneReferenceDrawer : PropertyDrawer {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);
-
-            SerializedProperty assetProp = property.FindPropertyRelative("_asset");
+            
+            SerializedProperty assetProp = property.FindPropertyRelative(nameof(SceneReference._asset));
+            // SerializedProperty guidProp = property.FindPropertyRelative(nameof(SceneReference._guid));
+            // var asset = assetProp.objectReferenceValue as SceneAsset;
+            
+            // Color color = GUI.color;
+            // if (asset == null) {
+            //     // ignore
+            // }
+            // else {
+                
+            // }
+            
             EditorGUI.PropertyField(position, assetProp, label);
-
             EditorGUI.EndProperty();
         }
 
