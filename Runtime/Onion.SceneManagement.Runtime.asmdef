@@ -3,6 +3,7 @@
     "rootNamespace": "Onion",
     "references": [
         "Unity.Addressables",
+        "Unity.ResourceManager",
         "Unity.Addressables.Editor"
     ],
     "includePlatforms": [],
