@@ -3,12 +3,20 @@ namespace Onion.SceneManagement.Transition {
         None,
         Load,
         Unload,
+        
         Enter,
         EnterAsync,
         Exit,
         ExitAsync,
+
+        GlobalEnter,
+        GlobalEnterAsync,
+        GlobalExit,
+        GlobalExitAsync,
+
         Callback,
         CallbackAsync,
+        
         Yield,
         Delay,
         DelayFrame,

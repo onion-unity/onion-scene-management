@@ -1,19 +1,43 @@
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Onion.SceneManagement.Transition {
-    public class Transition {
+    public sealed class Transition {
         private const int initialCapacity = 8;
 
+        private readonly List<SceneReference> _destinations = new(initialCapacity);
         private readonly List<TransitionAction> _actions = new(initialCapacity);
         private readonly Queue<Awaitable> _parallels = new(initialCapacity);
+
+        private readonly List<SceneReference> _toLoad = new(initialCapacity);
+        private readonly List<Scene> _toUnload = new(initialCapacity);
+
         private bool _isUsed = false;
+        private TransitionMode _mode = TransitionMode.Default;
 
         internal Transition() { }
 
-        public static Transition Create() {
-            return TransitionPool.Get();
+        public static Transition Create(IEnumerable<SceneReference> destinations) {
+            return TransitionPool.Get()
+                .To(destinations);
+        }
+
+        public static Transition Create(SceneReference destination) {
+            return TransitionPool.Get()
+                .To(destination);
+        }
+
+        public static Transition Create(IEnumerable<SceneReference> destinations, TransitionMode mode) {
+            return TransitionPool.Get()
+                .To(destinations)
+                .Mode(mode);
+        }
+
+        public static Transition Create(SceneReference destination, TransitionMode mode) {
+            return TransitionPool.Get()
+                .To(destination)
+                .Mode(mode);
         }
 
         internal Transition Add(TransitionAction action) => Add(action, false);
@@ -24,9 +48,29 @@ namespace Onion.SceneManagement.Transition {
 
             return this;
         }
+
+        internal Transition To(IEnumerable<SceneReference> references) {
+            _destinations.AddRange(references);
+
+            return this;
+        }
+
+        internal Transition To(SceneReference reference) {
+            _destinations.Add(reference);
+
+            return this;
+        }
+
+        internal Transition Mode(TransitionMode mode) {
+            _mode = mode;
+
+            return this;
+        }
         
         internal void Clear() {
             _isUsed = false;
+
+            _destinations.Clear();
 
             _actions.Clear();
             _parallels.Clear();
@@ -37,10 +81,16 @@ namespace Onion.SceneManagement.Transition {
         }
 
         public async Awaitable ExecuteAsync() {
-            if (_isUsed) return;
+            if (_isUsed) {
+                Debug.LogWarning("This transition has already been used.");
+                return;    
+            }
+
             _isUsed = true;
 
             try {
+                Prepare();
+
                 foreach (var action in _actions) {
                     if (!action.parallel) {
                         await WaitForParallels();
@@ -65,6 +115,36 @@ namespace Onion.SceneManagement.Transition {
             }
         }
 
+        private void Prepare() {
+            if (_destinations.Count == 0) {
+                return;
+            }
+
+            _toLoad.AddRange(_destinations);
+            _toUnload.AddRange(SceneManager.loadedScenes);
+
+            switch (_mode.unloadMode) {
+                case UnloadMode.None:
+
+                    break;
+                case UnloadMode.CleanUp:
+
+                    break;
+            }
+
+            switch (_mode.loadMode) {
+                case LoadMode.None:
+
+                    break;
+                case LoadMode.Additive:
+
+                    break;
+                case LoadMode.Refresh:
+
+                    break;
+            }
+        }
+
         private async Awaitable WaitForParallels() {
             while (_parallels.Count > 0) {
                 var parallel = _parallels.Dequeue();
@@ -75,12 +155,18 @@ namespace Onion.SceneManagement.Transition {
 
         private Awaitable Execute_Internal(TransitionAction action) {
             return action.type switch {
-                TransitionActionType.Load => null,
-                TransitionActionType.Unload => null,
-                TransitionActionType.Enter => null,
-                TransitionActionType.Exit => null,
-                TransitionActionType.EnterAsync => null,
-                TransitionActionType.ExitAsync => null,
+                TransitionActionType.Load => SceneManager.LoadSceneAsync_Internal(action.reference.CreateLoader()),
+                TransitionActionType.Unload => SceneManager.UnloadSceneAsync_Internal(action.scene.GetLoader()),
+
+                TransitionActionType.Enter => SceneManager.NotifyEnter_Internal(action.scene, global: false),
+                TransitionActionType.Exit => SceneManager.NotifyExit_Internal(action.scene, global: false),
+                TransitionActionType.EnterAsync => SceneManager.NotifyAsyncEnter_Internal(action.scene, global: false),
+                TransitionActionType.ExitAsync => SceneManager.NotifyAsyncExit_Internal(action.scene, global: false),
+
+                TransitionActionType.GlobalEnter => SceneManager.NotifyEnter_Internal(action.scene, global: true),
+                TransitionActionType.GlobalExit => SceneManager.NotifyExit_Internal(action.scene, global: true),
+                TransitionActionType.GlobalEnterAsync => SceneManager.NotifyAsyncEnter_Internal(action.scene, global: true),
+                TransitionActionType.GlobalExitAsync => SceneManager.NotifyAsyncExit_Internal(action.scene, global: true),
 
                 TransitionActionType.Delay => Delay_Internal(action),
                 TransitionActionType.DelayFrame => DelayFrame_Internal(action),

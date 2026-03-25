@@ -41,6 +41,9 @@ namespace Onion.SceneManagement {
             return null;
         }
 
+        public static SceneLoader GetLoader(this SceneReference reference)
+            => GetLoader(reference.scene);
+
         public static SceneLoader CreateLoader(this SceneReference reference) {
             return reference.type switch {
                 SceneReferenceType.BuiltIn => new BuiltInSceneLoader(reference),
