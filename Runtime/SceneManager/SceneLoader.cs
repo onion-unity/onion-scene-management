@@ -1,5 +1,6 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UniScene = UnityEngine.SceneManagement.Scene; 
+using UniSceneManagement = UnityEngine.SceneManagement;
 using UniSceneManager = UnityEngine.SceneManagement.SceneManager;
 
 #if ONION_ADDRESSABLES
@@ -12,8 +13,8 @@ namespace Onion.SceneManagement {
     internal abstract class SceneLoader {
         protected SceneReference reference { get; }
 
-        private Scene _scene;
-        public Scene scene {
+        private UniScene _scene;
+        public UniScene scene {
             get => _scene;
             protected set {
                 if (value == _scene) return;
@@ -38,7 +39,9 @@ namespace Onion.SceneManagement {
         public override async Awaitable<bool> LoadAsync() {
             UniSceneManager.sceneLoaded += OnSceneLoaded;
 
-            var operation = UniSceneManager.LoadSceneAsync(reference.path, LoadSceneMode.Additive);
+            var operation = UniSceneManager.LoadSceneAsync(
+                reference.path,
+                UniSceneManagement.LoadSceneMode.Additive);
             operation.allowSceneActivation = false;
 
             while (operation.progress < loadThreshold) {
@@ -60,7 +63,7 @@ namespace Onion.SceneManagement {
             scene.Unregister();
         }
 
-        private void OnSceneLoaded(Scene loadedScene, LoadSceneMode mode) {
+        private void OnSceneLoaded(UniScene loadedScene, UniSceneManagement.LoadSceneMode mode) {
             if (loadedScene.HasLoader()) return;
             if (loadedScene.path == reference.path) {
                 scene = loadedScene;
@@ -77,7 +80,7 @@ namespace Onion.SceneManagement {
 
         public override async Awaitable<bool> LoadAsync() {
 #if ONION_ADDRESSABLES
-            _handle = Addressables.LoadSceneAsync(reference.path, LoadSceneMode.Additive);
+            _handle = Addressables.LoadSceneAsync(reference.path, UniSceneManagement.LoadSceneMode.Additive);
 
             var instance = await _handle.Task;
             scene = instance.Scene;

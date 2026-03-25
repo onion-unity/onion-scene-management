@@ -1,5 +1,5 @@
-namespace Onion.SceneManagement.Handlers { 
-    public interface ISceneHandler { 
-        bool ExecuteAlways { get; }
+namespace Onion.SceneManagement.Handler { 
+    public interface ISceneHandler {
+        
     }
 }

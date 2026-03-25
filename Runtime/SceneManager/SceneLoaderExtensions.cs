@@ -23,9 +23,15 @@ namespace Onion.SceneManagement {
             return _loaders.ContainsKey(scene);
         }
 
+        public static bool HasLoader(this SceneReference reference)
+            => HasLoader(reference.scene);
+
         public static bool TryGetLoader(this Scene scene, out SceneLoader loader) {
             return _loaders.TryGetValue(scene, out loader);
         }
+
+        public static bool TryGetLoader(this SceneReference reference, out SceneLoader loader)
+            => TryGetLoader(reference.scene, out loader);
 
         public static SceneLoader GetLoader(this Scene scene) {
             if (TryGetLoader(scene, out var loader)) {
@@ -33,6 +39,16 @@ namespace Onion.SceneManagement {
             }
 
             return null;
+        }
+
+        public static SceneLoader CreateLoader(this SceneReference reference) {
+            return reference.type switch {
+                SceneReferenceType.BuiltIn => new BuiltInSceneLoader(reference),
+#if ONION_ADDRESSABLES
+                SceneReferenceType.Addressable => new AddressableSceneLoader(reference),
+#endif
+                _ => null
+            };
         }
     }
 }

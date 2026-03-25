@@ -118,12 +118,10 @@ namespace Onion.SceneManagement.Transition {
             }
         }
 
-        private async Awaitable Callback_Internal(TransitionAction action) {
-            if (action.callback == null) {
-                return;
-            }
-
-            action.callback.Invoke();
+        private Awaitable Callback_Internal(TransitionAction action) {
+            action.callback?.Invoke();
+            
+            return null;
         }
 
         private Awaitable CallbackAsync_Internal(TransitionAction action) {

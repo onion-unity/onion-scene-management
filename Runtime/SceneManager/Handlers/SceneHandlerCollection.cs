@@ -3,25 +3,25 @@ using UnityEngine;
 using UnityEngine.Pool;
 using UniSceneManagement = UnityEngine.SceneManagement;
 
-namespace Onion.SceneManagement.Handlers {
+namespace Onion.SceneManagement.Handler {
     internal sealed class HandlerGroup<T> where T : ISceneHandler {
-        private readonly List<T> _normalHandlers = new();
-        private readonly List<T> _alwaysHandlers = new();
+        private readonly List<T> _normal = new();
+        private readonly List<T> _always = new();
 
-        public IReadOnlyList<T> normalHandlers => _normalHandlers;
-        public IReadOnlyList<T> alwaysHandlers => _alwaysHandlers;
+        public IReadOnlyList<T> normal => _normal;
+        public IReadOnlyList<T> always => _always;
 
-        public void Add(T handler) {
-            if (handler.ExecuteAlways) {
-                _alwaysHandlers.Add(handler);
+        public void Add(T handler, bool executeAlways) {
+            if (executeAlways) {
+                _always.Add(handler);
             } else {
-                _normalHandlers.Add(handler);
+                _normal.Add(handler);
             }
         }
 
         public void Clear() {
-            _normalHandlers.Clear();
-            _alwaysHandlers.Clear();
+            _normal.Clear();
+            _always.Clear();
         }
     }
 
@@ -54,10 +54,21 @@ namespace Onion.SceneManagement.Handlers {
         }
 
         private void AddHandler(ISceneHandler handler) {
-            if (handler is ISceneEnterHandler e) enter.Add(e);
-            if (handler is ISceneExitHandler x) exit.Add(x);
-            if (handler is IAsyncSceneEnterHandler ae) asyncEnter.Add(ae);
-            if (handler is IAsyncSceneExitHandler ax) asyncExit.Add(ax);
+            if (handler is ISceneEnterHandler e) {
+                enter.Add(e, e.IsExecuteAlways(SceneHandlerType.Enter));
+            }
+
+            if (handler is ISceneExitHandler x) {
+                exit.Add(x, x.IsExecuteAlways(SceneHandlerType.Exit));
+            }
+
+            if (handler is IAsyncSceneEnterHandler ae) {
+                asyncEnter.Add(ae, ae.IsExecuteAlways(SceneHandlerType.AsyncEnter));
+            }
+            
+            if (handler is IAsyncSceneExitHandler ax) {
+                asyncExit.Add(ax, ax.IsExecuteAlways(SceneHandlerType.AsyncExit));
+            }
         }
 
         public void Clear() {
