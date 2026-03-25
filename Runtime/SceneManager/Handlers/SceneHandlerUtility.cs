@@ -13,6 +13,13 @@ namespace Onion.SceneManagement.Handler {
             { SceneHandlerType.AsyncExit, nameof(IAsyncSceneExitHandler.OnSceneExitAsync) }
         };
 
+        private static readonly IDictionary<SceneHandlerType, Type> _handlerInterfaceCache = new Dictionary<SceneHandlerType, Type> {
+            { SceneHandlerType.Enter, typeof(ISceneEnterHandler) },
+            { SceneHandlerType.Exit, typeof(ISceneExitHandler) },
+            { SceneHandlerType.AsyncEnter, typeof(IAsyncSceneEnterHandler) },
+            { SceneHandlerType.AsyncExit, typeof(IAsyncSceneExitHandler) }
+        };
+
         public static bool IsExecuteAlways(this ISceneHandler handler, SceneHandlerType handlerType) {
             var methodType = handler.GetType();
             var key = (methodType, handlerType);
@@ -35,7 +42,21 @@ namespace Onion.SceneManagement.Handler {
                 | BindingFlags.NonPublic);
             
             if (method == null) {
-                
+                var interfaceType = _handlerInterfaceCache[handlerTypeEnum];
+                try {
+                    var map = handlerType.GetInterfaceMap(interfaceType);
+                    for (int i = 0; i < map.InterfaceMethods.Length; i++) {
+                        if (map.InterfaceMethods[i].Name != methodName) {
+                            continue;
+                        }
+
+                        method = map.TargetMethods[i];
+                        break;
+                    }
+                }
+                catch {
+                    return null;
+                }
             }
 
             return method;
