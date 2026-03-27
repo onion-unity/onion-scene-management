@@ -72,7 +72,17 @@ namespace Onion.SceneManagement {
         }
 
         public int buildIndex => SceneUtility.GetBuildIndexByScenePath(path);
-        public string name => Path.GetFileNameWithoutExtension(path);
+        public string name {
+            get {
+#if ONION_ADDRESSABLES
+                if (type == SceneReferenceType.Addressable) {
+                    return Path.GetFileNameWithoutExtension(ScenePathDictionary.guidToPath[guid]);
+                }
+#endif
+
+                return Path.GetFileNameWithoutExtension(path);
+            }
+        }
         public Scene scene => UnityEngine.SceneManagement.SceneManager.GetSceneByPath(path);
         public bool isLoaded => scene.IsValid() && scene.isLoaded;
 

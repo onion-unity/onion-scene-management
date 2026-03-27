@@ -54,6 +54,7 @@ namespace Onion.SceneManagement.Transition {
         }
 
         internal Transition To(IEnumerable<SceneReference> references) {
+            Debug.Log($"Adding destinations to transition: {string.Join(", ", references.Select(r => r.scene.name))}.");
             _destinations.AddRange(references);
 
             return this;
@@ -155,6 +156,7 @@ namespace Onion.SceneManagement.Transition {
             }
 
             var loadedScenes = SceneManager.loadedScenes;
+
             if (_mode.unloadMode == UnloadMode.CleanUp) {
                 _toUnload.AddRange(loadedScenes);
             }

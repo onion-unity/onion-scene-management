@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Onion.SceneManagement {
@@ -14,9 +15,12 @@ namespace Onion.SceneManagement {
         }
 
         public static void Unregister(this Scene scene) {
-            if (scene.IsValid()) {
-                _loaders.Remove(scene);
+            if (scene.isLoaded) {
+                // why?
+                return;
             }
+
+            _loaders.Remove(scene);
         }
 
         public static bool HasLoader(this Scene scene) {

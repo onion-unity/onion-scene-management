@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Onion.SceneManagement.Handler;
+using Onion.SceneManagement.Transition;
 using UnityEngine;
 using UnityEngine.Pool;
+using UniSceneManagement = UnityEngine.SceneManagement;
 using UniScene = UnityEngine.SceneManagement.Scene;
 
 namespace Onion.SceneManagement {
@@ -11,9 +13,76 @@ namespace Onion.SceneManagement {
         private static readonly List<UniScene> _loadedScenes = new();
         public static IReadOnlyList<UniScene> loadedScenes => _loadedScenes;
 
+        // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        // private static void Initialize() {
+        //     _loadedScenes.Clear();
+        //     _handlersCache.Clear();
+
+        //     for (int i = 0; i < UniSceneManagement.SceneManager.sceneCount; i++) {
+        //         var scene = UniSceneManagement.SceneManager.GetSceneAt(i);
+
+        //         _loadedScenes.Add(scene);
+                
+        //         var reference = SceneReference.FromScene(scene);
+        //         var loader = reference.CreateLoader();
+        //         loader.scene = scene;
+
+        //         var handlers = new SceneHandlerCollection();
+        //         handlers.Initialize(scene);
+
+        //         _handlersCache[scene] = handlers;
+        //     }
+        // }
+
         // --- Public API ---
         
-        
+        public static void LoadScene(SceneReference reference, TransitionMode mode = default) {
+            _ = LoadSceneAsync(reference, mode);
+        }
+
+        public static void LoadScenes(IEnumerable<SceneReference> references, TransitionMode mode = default) {
+            _ = LoadScenesAsync(references, mode);
+        }
+
+        public static Awaitable LoadSceneAsync(SceneReference reference, TransitionMode mode = default) {
+            return Transition.Transition.Create(reference)
+                .NotifyExit()
+                .Unload()
+                .Load()
+                .NotifyEnter()
+                .ExecuteAsync();
+        }
+
+        public static Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
+            return Transition.Transition.Create(references)
+                .NotifyExit()
+                .Unload()
+                .Load()
+                .NotifyEnter()
+                .ExecuteAsync();
+        }
+
+        public static void UnloadScene(SceneReference reference, TransitionMode mode = default) {
+            _ = UnloadSceneAsync(reference, mode);
+        }
+
+        public static void UnloadScenes(IEnumerable<SceneReference> references, TransitionMode mode = default) {
+            _ = UnloadScenesAsync(references, mode);
+        }
+
+        public static Awaitable UnloadSceneAsync(SceneReference reference, TransitionMode mode = default) {
+            return Transition.Transition.Create(reference)
+                .NotifyExit()
+                .Unload()
+                .ExecuteAsync();
+        }
+
+        public static Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
+            return Transition.Transition.Create(references)
+                .NotifyExit()
+                .Unload()
+                .ExecuteAsync();
+        }
 
         // --- internal API ---
 
@@ -36,6 +105,8 @@ namespace Onion.SceneManagement {
             if (loader?.scene.isLoaded != true) {
                 return;
             }
+
+            Debug.Log("Unloading scene: " + loader.scene.name);
 
             await loader.UnloadAsync();
 

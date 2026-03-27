@@ -6,14 +6,14 @@ namespace Onion.SceneManagement {
     /// </summary>
     public enum UnloadMode {
         /// <summary>
-        /// Keeps all currently loaded scenes active. No scenes will be automatically unloaded.
-        /// </summary>
-        None,
-
-        /// <summary>
         /// Automatically unloads any active scenes that are not included in the destination list.
         /// </summary>
         CleanUp,
+
+        /// <summary>
+        /// Keeps all currently loaded scenes active. No scenes will be automatically unloaded.
+        /// </summary>
+        None,
     }
 
     /// <summary>

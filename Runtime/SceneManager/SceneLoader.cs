@@ -16,7 +16,7 @@ namespace Onion.SceneManagement {
         private UniScene _scene;
         public UniScene scene {
             get => _scene;
-            protected set {
+            set {
                 if (value == _scene) return;
 
                 _scene = value;
@@ -61,6 +61,7 @@ namespace Onion.SceneManagement {
             await UniSceneManager.UnloadSceneAsync(scene);
 
             scene.Unregister();
+            Debug.Log($"Scene {scene.name} unloaded and unregistered.");
         }
 
         private void OnSceneLoaded(UniScene loadedScene, UniSceneManagement.LoadSceneMode mode) {
