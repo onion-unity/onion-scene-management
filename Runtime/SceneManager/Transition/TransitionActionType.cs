@@ -14,13 +14,17 @@ namespace Onion.SceneManagement.Transition {
         GlobalExit,
         GlobalExitAsync,
 
+        BatchEnter,
+        BatchExit,
+
         Callback,
         CallbackAsync,
         
-        Yield,
+        NextFrame,
         Delay,
         DelayFrame,
         WaitForEndOfFrame,
         WaitForFixedUpdate,
+        WaitForParallels,
     }
 }

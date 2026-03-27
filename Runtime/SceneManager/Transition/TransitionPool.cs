@@ -5,11 +5,16 @@ namespace Onion.SceneManagement.Transition {
         private static readonly Stack<Transition> _pool = new();
 
         public static Transition Get() {
+            Transition transition;
             if (_pool.Count > 0) {
-                return _pool.Pop();
+                transition = _pool.Pop();
+            }
+            else {
+                transition = new Transition();
             }
 
-            return new Transition();
+            transition.Init();
+            return transition;
         }
 
         public static void Release(Transition transition) {

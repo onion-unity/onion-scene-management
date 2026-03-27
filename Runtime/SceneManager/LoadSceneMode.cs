@@ -1,15 +1,39 @@
 using System;
 
 namespace Onion.SceneManagement {
+    /// <summary>
+    /// Defines the strategy for unloading existing scenes during a transition.
+    /// </summary>
     public enum UnloadMode {
-        None,    // don't unload.
-        CleanUp, // unload if the scene is loaded.
+        /// <summary>
+        /// Keeps all currently loaded scenes active. No scenes will be automatically unloaded.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Automatically unloads any active scenes that are not included in the destination list.
+        /// </summary>
+        CleanUp,
     }
 
+    /// <summary>
+    /// Defines the behavior for loading target scenes during a transition.
+    /// </summary>
     public enum LoadMode {
-        None,     // if the scene is already loaded, do nothing.
-        Additive, // whatever the scene is loaded or not, just add it.
-        Refresh,  // if the scene is already loaded, unload it first then load it again.
+        /// <summary>
+        /// If the scene is already active in the hierarchy, it will be skipped.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Always loads a new instance of the scene, regardless of its current state.
+        /// </summary>
+        Additive,
+
+        /// <summary>
+        /// If the scene is already loaded, it will be unloaded first and then reloaded to reset its state.
+        /// </summary>
+        Refresh,
     }
 
     public struct TransitionMode {
