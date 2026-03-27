@@ -7,6 +7,30 @@ namespace Onion.SceneManagement {
     public sealed class SceneGroupAsset : ScriptableObject, IEnumerable<SceneReference> {
         public SceneReference[] scenes;
 
+        public struct Enumerator : IEnumerator<SceneReference> {
+            private readonly SceneReference[] _scenes;
+            private int _index;
+
+            internal Enumerator(SceneReference[] scenes) {
+                _scenes = scenes;
+                _index = -1;
+            }
+
+            public readonly SceneReference Current => _scenes[_index];
+            readonly object IEnumerator.Current => Current;
+
+            public bool MoveNext() {
+                _index++;
+                return _index < _scenes.Length;
+            }
+
+            public void Reset() {
+                _index = -1;
+            }
+
+            public readonly void Dispose() { }
+        }
+
         public bool isLoaded {
             get {
                 if (scenes == null || scenes.Length == 0) {
@@ -29,11 +53,10 @@ namespace Onion.SceneManagement {
             }
         }
 
-        public IEnumerator<SceneReference> GetEnumerator() {
-            foreach (var reference in scenes) {
-                yield return reference;
-            }
-        }
+        public Enumerator GetEnumerator() => new(scenes);
+
+        IEnumerator<SceneReference> IEnumerable<SceneReference>.GetEnumerator()
+            => GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
