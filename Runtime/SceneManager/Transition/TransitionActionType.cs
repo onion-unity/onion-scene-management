@@ -20,9 +20,9 @@ namespace Onion.SceneManagement.Transition {
         Callback,
         CallbackAsync,
         
-        NextFrame,
         Delay,
         DelayFrame,
+        NextFrame,
         WaitForEndOfFrame,
         WaitForFixedUpdate,
         WaitForParallels,

@@ -11,6 +11,12 @@ namespace Onion.SceneManagement {
         private static readonly List<UniScene> _loadedScenes = new();
         public static IReadOnlyList<UniScene> loadedScenes => _loadedScenes;
 
+        // --- Public API ---
+        
+        
+
+        // --- internal API ---
+
         internal static async Awaitable LoadSceneAsync_Internal(SceneLoader loader) {
             if (loader?.scene.isLoaded == true) {
                 return;
