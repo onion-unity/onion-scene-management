@@ -61,7 +61,6 @@ namespace Onion.SceneManagement {
             await UniSceneManager.UnloadSceneAsync(scene);
 
             scene.Unregister();
-            Debug.Log($"Scene {scene.name} unloaded and unregistered.");
         }
 
         private void OnSceneLoaded(UniScene loadedScene, UniSceneManagement.LoadSceneMode mode) {
