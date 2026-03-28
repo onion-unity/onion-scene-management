@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 
@@ -185,6 +186,20 @@ namespace Onion.SceneManagement.Transition {
                         _toLoad.Add(destination);
 
                         break;
+                }
+            }
+
+            foreach (var scene in _toUnload) {
+                foreach (var root in scene.GetRootGameObjects()) {
+                    var audioListeners = root.GetComponentInChildren<AudioListener>();
+                    if (audioListeners != null) {
+                        audioListeners.enabled = false;
+                    }
+
+                    var eventSystem = root.GetComponentInChildren<EventSystem>();
+                    if (eventSystem != null) {
+                        eventSystem.enabled = false;
+                    }
                 }
             }
         }
