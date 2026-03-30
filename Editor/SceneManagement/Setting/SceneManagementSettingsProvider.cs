@@ -71,6 +71,8 @@ namespace Onion.SceneManagement.Editor {
             }
             else {
                 asset = ScriptableObject.CreateInstance<SceneManagementSettingsAsset>();
+                // SceneManagementSettings.Sync_Internal(asset);
+
                 if (!Directory.Exists(settingsDirectory.platformPath)) {
                     Directory.CreateDirectory(settingsDirectory.platformPath);
                 }

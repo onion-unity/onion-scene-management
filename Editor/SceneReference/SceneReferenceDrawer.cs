@@ -7,7 +7,7 @@ namespace Onion.SceneManagement.Editor {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);
             
-            SerializedProperty assetProp = property.FindPropertyRelative(nameof(SceneReference._asset));
+            SerializedProperty assetProp = property.FindPropertyRelative(nameof(SceneReference.asset));
             // SerializedProperty guidProp = property.FindPropertyRelative(nameof(SceneReference._guid));
             // var asset = assetProp.objectReferenceValue as SceneAsset;
             

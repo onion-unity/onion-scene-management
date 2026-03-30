@@ -11,7 +11,7 @@ namespace Onion.SceneManagement {
 
 #if UNITY_EDITOR
         [SerializeField] 
-        internal SceneAsset _asset = null;
+        internal SceneAsset asset = null;
 #endif
 
         [SerializeField] 
@@ -108,7 +108,7 @@ namespace Onion.SceneManagement {
                 return;
             }
 
-            _asset = asset;
+            this.asset = asset;
 #endif
         }
 
@@ -120,7 +120,7 @@ namespace Onion.SceneManagement {
 
             if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var guid, out _)) {
                 _guid = guid;
-                _asset = asset;
+                this.asset = asset;
             }
         }
 #endif
@@ -173,7 +173,7 @@ namespace Onion.SceneManagement {
 
         public void OnBeforeSerialize() {
 #if UNITY_EDITOR
-            if (_asset != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(_asset, out var guid, out _)) {
+            if (asset != null && AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var guid, out _)) {
                 _guid = GetSafeGuid(guid);
             }
             else {

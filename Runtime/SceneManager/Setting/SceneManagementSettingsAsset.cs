@@ -32,6 +32,9 @@ namespace Onion.SceneManagement.Setting {
 
         [SerializeField]
         internal SceneReference bootstrapScene;
+
+        [SerializeField]
+        internal bool useBootstrappedLoad = false;
         
         public bool overlapLoading = false;
         
