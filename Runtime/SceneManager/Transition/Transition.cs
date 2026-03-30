@@ -189,19 +189,19 @@ namespace Onion.SceneManagement.Transition {
                 }
             }
 
-            foreach (var scene in _toUnload) {
-                foreach (var root in scene.GetRootGameObjects()) {
-                    var audioListeners = root.GetComponentInChildren<AudioListener>();
-                    if (audioListeners != null) {
-                        audioListeners.enabled = false;
-                    }
+            // foreach (var scene in _toUnload) {
+            //     foreach (var root in scene.GetRootGameObjects()) {
+            //         var audioListeners = root.GetComponentInChildren<AudioListener>();
+            //         if (audioListeners != null) {
+            //             audioListeners.enabled = false;
+            //         }
 
-                    var eventSystem = root.GetComponentInChildren<EventSystem>();
-                    if (eventSystem != null) {
-                        eventSystem.enabled = false;
-                    }
-                }
-            }
+            //         var eventSystem = root.GetComponentInChildren<EventSystem>();
+            //         if (eventSystem != null) {
+            //             eventSystem.enabled = false;
+            //         }
+            //     }
+            // }
         }
 
         private void CreateLoadBatch(in List<TransitionAction> actions) {
