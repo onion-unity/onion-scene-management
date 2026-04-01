@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 
@@ -98,7 +96,6 @@ namespace Onion.SceneManagement.Transition {
             try {
                 Prepare();
                 
-                //using var pool = ListPool<TransitionAction>.Get(out var actionQueue);
                 for (int i = _actions.Count - 1; i >= 0; i--) {
                     _actionStack.Push(_actions[i]);
                 }
@@ -188,20 +185,6 @@ namespace Onion.SceneManagement.Transition {
                         break;
                 }
             }
-
-            // foreach (var scene in _toUnload) {
-            //     foreach (var root in scene.GetRootGameObjects()) {
-            //         var audioListeners = root.GetComponentInChildren<AudioListener>();
-            //         if (audioListeners != null) {
-            //             audioListeners.enabled = false;
-            //         }
-
-            //         var eventSystem = root.GetComponentInChildren<EventSystem>();
-            //         if (eventSystem != null) {
-            //             eventSystem.enabled = false;
-            //         }
-            //     }
-            // }
         }
 
         private void CreateLoadBatch(in List<TransitionAction> actions) {
@@ -309,6 +292,9 @@ namespace Onion.SceneManagement.Transition {
                 TransitionActionType.WaitForEndOfFrame  => Awaitable.EndOfFrameAsync(),
                 TransitionActionType.WaitForFixedUpdate => Awaitable.FixedUpdateAsync(),
 
+                TransitionActionType.WaitWhile => WaitWhile_Internal(action),
+                TransitionActionType.WaitUntil => WaitUntil_Internal(action),
+
                 TransitionActionType.Callback      => Callback_Internal(action),
                 TransitionActionType.CallbackAsync => CallbackAsync_Internal(action),
 
@@ -353,6 +339,26 @@ namespace Onion.SceneManagement.Transition {
             }
 
             return action.asyncCallback.Invoke();
+        }
+
+        private async Awaitable WaitWhile_Internal(TransitionAction action) {
+            if (action.condition == null) {
+                return;
+            }
+
+            while (!action.condition()) {
+                await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
+            }
+        }
+
+        private async Awaitable WaitUntil_Internal(TransitionAction action) {
+            if (action.condition == null) {
+                return;
+            }
+
+            while (action.condition()) {
+                await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
+            }
         }
     }
 }

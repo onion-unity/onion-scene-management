@@ -23,6 +23,10 @@ namespace Onion.SceneManagement.Transition {
         Delay,
         DelayFrame,
         NextFrame,
+
+        WaitWhile,
+        WaitUntil,
+        
         WaitForEndOfFrame,
         WaitForFixedUpdate,
         WaitForParallels,

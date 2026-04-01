@@ -24,6 +24,7 @@ namespace Onion.SceneManagement {
             }
         }
 
+        public abstract float progress { get; }
         protected SceneLoader(SceneReference reference) {
             this.reference = reference;
         }
@@ -34,23 +35,25 @@ namespace Onion.SceneManagement {
 
     internal class BuiltInSceneLoader : SceneLoader {
         private const float loadThreshold = 0.9f;
+        private AsyncOperation _operation;
         public BuiltInSceneLoader(SceneReference reference) : base(reference) { }
+        public override float progress => _operation != null ? _operation.progress : 0f;
 
         public override async Awaitable<bool> LoadAsync() {
             UniSceneManager.sceneLoaded += OnSceneLoaded;
 
-            var operation = UniSceneManager.LoadSceneAsync(
+            _operation = UniSceneManager.LoadSceneAsync(
                 reference.path,
                 UniSceneManagement.LoadSceneMode.Additive);
-            operation.allowSceneActivation = false;
+            _operation.allowSceneActivation = false;
 
-            while (operation.progress < loadThreshold) {
+            while (_operation.progress < loadThreshold) {
                 await Awaitable.NextFrameAsync();
             }
 
-            operation.allowSceneActivation = true;
+            _operation.allowSceneActivation = true;
 
-            await operation;
+            await _operation;
             await Awaitable.NextFrameAsync(); // wait for scene to be fully loaded
             UniSceneManager.sceneLoaded -= OnSceneLoaded;
 
@@ -77,6 +80,16 @@ namespace Onion.SceneManagement {
 #if ONION_ADDRESSABLES
         private AsyncOperationHandle<SceneInstance> _handle;
 #endif
+        
+        public override float progress {
+            get {
+#if ONION_ADDRESSABLES
+                return _handle.IsValid() ? _handle.PercentComplete : 0f;
+#else
+                return 0f;
+#endif
+            }
+        }
 
         public override async Awaitable<bool> LoadAsync() {
 #if ONION_ADDRESSABLES

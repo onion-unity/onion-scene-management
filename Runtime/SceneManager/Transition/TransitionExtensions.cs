@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using UnityEngine;
 
 namespace Onion.SceneManagement.Transition {
@@ -44,34 +45,55 @@ namespace Onion.SceneManagement.Transition {
             });
 
         // --- Wait/Sync Actions ---
-        public static Transition Delay(this Transition transition, float seconds, bool ignoreTimeScale = false, bool parallel = false)
+        public static Transition Delay(this Transition transition, float seconds, bool ignoreTimeScale = false, bool parallel = false, CancellationToken cancellationToken = default)
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.Delay,
                 waitSeconds = seconds,
                 ignoreTimeScale = ignoreTimeScale,
                 parallel = parallel,
+                cancellationToken = cancellationToken,
             });
 
-        public static Transition DelayFrame(this Transition transition, int frameCount = 1, bool parallel = false)
+        public static Transition DelayFrame(this Transition transition, int frameCount = 1, bool parallel = false, CancellationToken cancellationToken = default)
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.DelayFrame,
                 waitFrames = frameCount,
                 parallel = parallel,
+                cancellationToken = cancellationToken,
             });
 
-        public static Transition NextFrame(this Transition transition)
+        public static Transition NextFrame(this Transition transition, CancellationToken cancellationToken = default)
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.NextFrame,
+                cancellationToken = cancellationToken,
             });
 
-        public static Transition WaitForEndOfFrame(this Transition transition)
+        public static Transition WaitForEndOfFrame(this Transition transition, CancellationToken cancellationToken = default)
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.WaitForEndOfFrame,
+                cancellationToken = cancellationToken,
             });
 
-        public static Transition WaitForFixedUpdate(this Transition transition)
+        public static Transition WaitForFixedUpdate(this Transition transition, CancellationToken cancellationToken = default)
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.WaitForFixedUpdate,
+                cancellationToken = cancellationToken,
+            });
+        
+        public static Transition WaitWhile(this Transition transition, Func<bool> condition, bool parallel = false, CancellationToken cancellationToken = default)
+            => transition.Add(new TransitionAction() {
+                type = TransitionActionType.WaitWhile,
+                condition = condition,
+                parallel = parallel,
+                cancellationToken = cancellationToken,
+            });
+
+        public static Transition WaitUntil(this Transition transition, Func<bool> condition, bool parallel = false, CancellationToken cancellationToken = default)
+            => transition.Add(new TransitionAction() {
+                type = TransitionActionType.WaitUntil,
+                condition = condition,
+                parallel = parallel,
+                cancellationToken = cancellationToken,
             });
     }
 }

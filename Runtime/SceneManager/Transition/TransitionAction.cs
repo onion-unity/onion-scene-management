@@ -18,6 +18,9 @@ namespace Onion.SceneManagement.Transition {
 
         internal Action callback;
         internal Func<Awaitable> asyncCallback;
+
+        internal Func<bool> condition;
+
         internal CancellationToken cancellationToken;
 
         internal bool parallel;
@@ -100,6 +103,20 @@ namespace Onion.SceneManagement.Transition {
                 type = TransitionActionType.GlobalExitAsync,
                 scene = scene,
                 parallel = parallel
+            };
+        }
+
+        internal static TransitionAction WaitWhile(Func<bool> condition) {
+            return new TransitionAction {
+                type = TransitionActionType.WaitWhile,
+                condition = condition
+            };
+        }
+
+        internal static TransitionAction WaitUntil(Func<bool> condition) {
+            return new TransitionAction {
+                type = TransitionActionType.WaitUntil,
+                condition = condition
             };
         }
 
