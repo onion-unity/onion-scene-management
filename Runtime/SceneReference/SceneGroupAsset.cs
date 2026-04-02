@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace Onion.SceneManagement {
     [CreateAssetMenu(fileName = "SceneGroup", menuName = "Scene/Scene Group Asset")]
-    public sealed class SceneGroupAsset : ScriptableObject, IEnumerable<SceneReference> {
-        public SceneReference[] scenes;
+    public class SceneGroupAsset : ScriptableObject, IEnumerable<SceneReference> {
+        public List<SceneReference> scenes;
 
         public struct Enumerator : IEnumerator<SceneReference> {
-            private readonly SceneReference[] _scenes;
+            private readonly IReadOnlyList<SceneReference> _scenes;
             private int _index;
 
-            internal Enumerator(SceneReference[] scenes) {
+            internal Enumerator(IReadOnlyList<SceneReference> scenes) {
                 _scenes = scenes;
                 _index = -1;
             }
@@ -21,7 +21,7 @@ namespace Onion.SceneManagement {
 
             public bool MoveNext() {
                 _index++;
-                return _index < _scenes.Length;
+                return _index < _scenes.Count;
             }
 
             public void Reset() {
@@ -33,7 +33,7 @@ namespace Onion.SceneManagement {
 
         public bool isLoaded {
             get {
-                if (scenes == null || scenes.Length == 0) {
+                if (scenes == null || scenes.Count == 0) {
                     return false;
                 }
 

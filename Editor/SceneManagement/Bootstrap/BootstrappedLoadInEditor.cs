@@ -1,4 +1,5 @@
 using Onion.SceneManagement.Setting;
+using Onion.SceneManagement.Utility;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -10,8 +11,27 @@ namespace Onion.SceneManagement.Editor {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void Initialize() {
+            if (!SceneManagementSettings.canUseBootstrapScene) {
+                return;
+            }
+
+            _ = WaitForBootstrapper();
+        }
+
+        private static async Awaitable WaitForBootstrapper() {
+            await AwaitableEx.WaitWhile(() => !Bootstrapper.isReady, 
+                cancellationToken: Application.exitCancellationToken);
+
+            var group = SceneManagementSettings.bootstrapGroup;
+            if (group != null) {
+                await group.LoadAsync();
+            }
+        }
+
         private static void OnPlayModeStateChanged(PlayModeStateChange state) {
-            if (!SceneManagementSettings.useBootstrappedLoad) {
+            if (!SceneManagementSettings.canUseBootstrapScene) {
                 return;
             }
 
@@ -23,6 +43,19 @@ namespace Onion.SceneManagement.Editor {
 
             switch (state) {
                 case PlayModeStateChange.ExitingEditMode:
+                    var group = SceneManagementSettings.bootstrapGroup;
+                    group.scenes.Clear();
+
+                    int sceneCount = EditorSceneManager.sceneCount;
+                    for (int i = 0; i < sceneCount; i++) {
+                        var scene = EditorSceneManager.GetSceneAt(i);
+                        if (!scene.isLoaded) {
+                            continue;
+                        }
+
+                        group.scenes.Add(SceneReference.FromPath(scene.path));
+                    }
+
                     EditorSceneManager.playModeStartScene = bootstrapScene.asset;
 
                     break;

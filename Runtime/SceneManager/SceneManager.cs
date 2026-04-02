@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Onion.SceneManagement.Handler;
 using Onion.SceneManagement.Transition;
@@ -32,6 +31,16 @@ namespace Onion.SceneManagement {
                 handlers.Initialize(scene);
 
                 _handlersCache[scene] = handlers;
+            }
+
+            foreach (var scene in _loadedScenes) {
+                _ = NotifyEnter_Internal(scene);
+                _ = NotifyEnter_Internal(scene, global: true);
+            }
+
+            foreach (var scene in _loadedScenes) {
+                _ = NotifyAsyncEnter_Internal(scene);
+                _ = NotifyAsyncEnter_Internal(scene, global: true);
             }
         }
 

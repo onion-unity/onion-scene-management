@@ -1,4 +1,6 @@
 using UnityEngine;
+using System;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -28,15 +30,44 @@ namespace Onion.SceneManagement.Setting {
             }
         }
 
+        public bool overlapLoading = false;
+
         public bool useBootstrapScene = false;
 
         [SerializeField]
         internal SceneReference bootstrapScene;
 
+        [Header("Editor Options")]
         [SerializeField]
         internal bool useBootstrappedLoad = false;
-        
-        public bool overlapLoading = false;
+
+
+#if UNITY_EDITOR
+        private BootstrapGroup _bootstrapGroup;
+        internal BootstrapGroup bootstrapGroup {
+            get {
+                if (_bootstrapGroup == null) {
+                    var asset = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(this));
+                    foreach (var obj in asset) {
+                        if (obj is BootstrapGroup group) {
+                            _bootstrapGroup = group;
+                            break;
+                        }
+                    }
+
+                    if (_bootstrapGroup == null) {
+                        _bootstrapGroup = CreateInstance<BootstrapGroup>();
+                        _bootstrapGroup.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.DontSave;
+                        
+                        AssetDatabase.AddObjectToAsset(_bootstrapGroup, this);
+                        AssetDatabase.SaveAssets();
+                    }
+                }
+
+                return _bootstrapGroup;
+            }
+        }
+#endif
         
         private void OnEnable() {
 #if UNITY_EDITOR

@@ -63,7 +63,13 @@ namespace Onion.SceneManagement {
                         return SceneReferenceType.Addressable;
                     }
 #endif
-                    if (ScenePathDictionary.guidToPath.ContainsKey(guid) && buildIndex != -1) {
+                    if (ScenePathDictionary.guidToPath.ContainsKey(guid)) {
+#if !UNITY_EDITOR
+                        if (buildIndex == -1) {
+                            return SceneReferenceType.None;
+                        }
+#endif
+
                         return SceneReferenceType.BuiltIn;
                     }
                 }
