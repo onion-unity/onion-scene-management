@@ -35,6 +35,21 @@ namespace Onion.SceneManagement {
         public static Awaitable UnloadAsync(this IEnumerable<SceneReference> references) {
             return SceneManager.UnloadScenesAsync(references);
         }
+
         #endregion
+        #region --- Pinning ---
+
+        public static void Pin(this SceneReference reference) => SceneManager.Pin(reference);
+        public static void Pin(this IEnumerable<SceneReference> references) => SceneManager.Pin(references);
+        public static void Unpin(this SceneReference reference) => SceneManager.Unpin(reference);
+        public static void Unpin(this IEnumerable<SceneReference> references) => SceneManager.Unpin(references);
+        public static bool IsPinned(this SceneReference reference) => SceneManager.IsPinned(reference);
+        public static bool ArePinned(this IEnumerable<SceneReference> references) => SceneManager.ArePinned(references);
+
+        #endregion
+
+        public static bool IsActive(this SceneReference reference) {
+            return reference.scene.IsActive();
+        }
     }
 }

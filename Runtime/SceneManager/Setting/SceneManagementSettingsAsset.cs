@@ -32,14 +32,10 @@ namespace Onion.SceneManagement.Setting {
 
         public bool overlapLoading = false;
 
-        public bool useBootstrapScene = false;
+        public bool useBootstrap = false;
 
         [SerializeField]
         internal SceneReference bootstrapScene;
-
-        [Header("Editor Options")]
-        [SerializeField]
-        internal bool useBootstrappedLoad = false;
 
 
 #if UNITY_EDITOR

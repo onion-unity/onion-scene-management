@@ -6,11 +6,13 @@ using UnityEngine.Pool;
 using UniSceneManagement = UnityEngine.SceneManagement;
 using UniScene = UnityEngine.SceneManagement.Scene;
 using Onion.SceneManagement.Utility;
+using Onion.SceneManagement.Setting;
 
 namespace Onion.SceneManagement {
     public static class SceneManager {
         private static readonly Dictionary<UniScene, SceneHandlerCollection> _handlersCache = new();
         private static readonly List<UniScene> _loadedScenes = new();
+        private static readonly HashSet<UniScene> _pinnedScenes = new();
         public static IReadOnlyList<UniScene> loadedScenes => _loadedScenes;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -20,6 +22,15 @@ namespace Onion.SceneManagement {
 
             for (int i = 0; i < UniSceneManagement.SceneManager.sceneCount; i++) {
                 var scene = UniSceneManagement.SceneManager.GetSceneAt(i);
+                if (SceneManagementSettings.useBootstrap && SceneManagementSettings.canUseBootstrapScene) {
+                    var bootstrapScene = SceneManagementSettings.bootstrapScene.scene;
+
+                    if (scene == bootstrapScene) {
+                        Bootstrapper.isReady = true;
+
+                        Debug.Log($"Bootstrap scene '{bootstrapScene.name}' is loaded.");
+                    }
+                }
 
                 _loadedScenes.Add(scene);
                 
@@ -101,6 +112,78 @@ namespace Onion.SceneManagement {
                 .Unload()
                 .ExecuteAsync();
         }
+
+        public static void Pin(UniScene scene) {
+            if (_pinnedScenes.Contains(scene)) {
+                return;
+            }
+
+            if (scene.IsValid() && scene.isLoaded) {
+                _pinnedScenes.Add(scene);
+            }
+        }
+
+        public static void Pin(SceneReference reference)
+            => Pin(reference.scene);
+
+        public static void Pin(IEnumerable<UniScene> scenes) {
+            foreach (var scene in scenes) {
+                Pin(scene);
+            }
+        }
+
+        public static void Pin(IEnumerable<SceneReference> references) {
+            foreach (var reference in references) {
+                Pin(reference);
+            }
+        }
+
+        public static void Unpin(UniScene scene) {
+            if (_pinnedScenes.Contains(scene)) {
+                _pinnedScenes.Remove(scene);
+            }
+        }
+
+        public static void Unpin(SceneReference reference)
+            => Unpin(reference.scene);
+
+        public static void Unpin(IEnumerable<UniScene> scenes) {
+            foreach (var scene in scenes) {
+                Unpin(scene);
+            }
+        }
+
+        public static void Unpin(IEnumerable<SceneReference> references) {
+            foreach (var reference in references) {
+                Unpin(reference);
+            }
+        }
+
+        public static bool IsPinned(UniScene scene) {
+            return _pinnedScenes.Contains(scene);
+        }
+
+        public static bool IsPinned(SceneReference reference)
+            => IsPinned(reference.scene);
+
+        public static bool ArePinned(IEnumerable<UniScene> scenes) {
+            foreach (var scene in scenes) {
+                if (!IsPinned(scene)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public static bool ArePinned(IEnumerable<SceneReference> references) {
+            foreach (var reference in references) {
+                if (!IsPinned(reference)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
 
         // --- internal API ---
 
