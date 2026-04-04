@@ -33,6 +33,33 @@ namespace Onion.SceneManagement.Editor {
             EditorBuildSettings.scenes = buildScenes.ToArray();
         }
 
+        public static void RemoveFromBuild(this SceneAsset asset) {
+            if (asset == null) {
+                return;
+            }
+
+            RemoveFromBuild(new[] { asset });
+        }
+
+        public static void RemoveFromBuild(this IEnumerable<SceneAsset> assets) {
+            var buildScenes = EditorBuildSettings.scenes.ToList();
+            using var pool = HashSetPool<string>.Get(out var paths);
+            foreach (var scene in buildScenes) {
+                paths.Add(scene.path);
+            }
+
+            foreach (var asset in assets) {
+                string path = AssetDatabase.GetAssetPath(asset);
+                if (!paths.Contains(path)) {
+                    continue;
+                }
+
+                buildScenes.RemoveAll(s => s.path == path);
+            }
+
+            EditorBuildSettings.scenes = buildScenes.ToArray();
+        }
+
         public static bool IsInBuild(this SceneAsset asset) {
             string path = AssetDatabase.GetAssetPath(asset);
 
