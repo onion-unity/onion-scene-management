@@ -63,10 +63,11 @@ namespace Onion.SceneManagement.Editor {
                 var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Additive);
                 if (EditorSceneManager.SaveScene(scene, path)) {
                     EditorSceneManager.CloseScene(scene, true);
-
                     AssetDatabase.Refresh();
+                    
                     var asset = AssetDatabase.LoadAssetAtPath<SceneAsset>(path);
                     assetProp.objectReferenceValue = asset;
+
                     EditorGUIUtility.PingObject(asset);
                 }
             }

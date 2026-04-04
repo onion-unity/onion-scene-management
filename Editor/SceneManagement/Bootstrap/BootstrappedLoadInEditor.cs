@@ -14,6 +14,11 @@ namespace Onion.SceneManagement.Editor {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Initialize() {
             if (!SceneManagementSettings.canUseBootstrapScene) {
+                if (SceneManagementSettings.useBootstrap) {
+                    Debug.LogWarning("useBootstrap is enabled but bootstrap scene cannot be used. Please check the settings.", 
+                        SceneManagementSettingsAsset.instance);
+                }
+
                 return;
             }
 
