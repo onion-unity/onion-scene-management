@@ -12,7 +12,7 @@ namespace Onion.SceneManagement.Editor {
         public override void OnInspectorGUI() {
             // base.OnInspectorGUI();
 
-            if (!SceneManagementSettings.useBootstrapScene) {
+            if (!SceneManagementSettings.useBootstrap) {
                 EditorGUILayout.HelpBox(bootstrapSceneInfo, MessageType.Info);
 
                 return;
