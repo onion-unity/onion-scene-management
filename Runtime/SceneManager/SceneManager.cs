@@ -7,13 +7,18 @@ using UniSceneManagement = UnityEngine.SceneManagement;
 using UniScene = UnityEngine.SceneManagement.Scene;
 using Onion.SceneManagement.Utility;
 using Onion.SceneManagement.Setting;
+using System;
 
 namespace Onion.SceneManagement {
     public static class SceneManager {
         private static readonly Dictionary<UniScene, SceneHandlerCollection> _handlersCache = new();
         private static readonly List<UniScene> _loadedScenes = new();
         private static readonly HashSet<UniScene> _pinnedScenes = new();
+        private static UniScene _barrierScene;
         public static IReadOnlyList<UniScene> loadedScenes => _loadedScenes;
+
+        public static event Action<UniScene> sceneLoaded;
+        public static event Action<UniScene> sceneUnloaded;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Initialize() {
@@ -33,7 +38,8 @@ namespace Onion.SceneManagement {
                 }
 
                 _loadedScenes.Add(scene);
-                
+                sceneLoaded?.Invoke(scene);
+
                 var reference = SceneReference.FromScene(scene);
                 var loader = reference.CreateLoader();
                 loader.scene = scene;
@@ -66,12 +72,9 @@ namespace Onion.SceneManagement {
         }
 
         public static Awaitable LoadSceneAsync(SceneReference reference, TransitionMode mode = default) {
-            return Transition.Transition.Create(reference, mode)
-                .NotifyExit()
-                .Load()
-                .Unload()
-                .NotifyEnter()
-                .ExecuteAsync();
+            return SceneManagementSettings.overlapLoading
+                ? Transition.Transition.Create(reference, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
+                : Transition.Transition.Create(reference, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
         }
 
         public static Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
@@ -79,12 +82,9 @@ namespace Onion.SceneManagement {
                 return null;
             }
 
-            return Transition.Transition.Create(references, mode)
-                .NotifyExit()
-                .Load()
-                .Unload()
-                .NotifyEnter()
-                .ExecuteAsync();
+            return SceneManagementSettings.overlapLoading
+                ? Transition.Transition.Create(references, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
+                : Transition.Transition.Create(references, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
         }
 
         public static void UnloadScene(SceneReference reference, UnloadMode mode = default) {
@@ -193,6 +193,9 @@ namespace Onion.SceneManagement {
             }
 
             await loader.LoadAsync();
+            sceneLoaded?.Invoke(loader.scene);
+
+            RemoveBarrierIfExists();
 
             _loadedScenes.Add(loader.scene);
 
@@ -202,13 +205,20 @@ namespace Onion.SceneManagement {
             _handlersCache[loader.scene] = handlers;
         }
 
+        internal static async Awaitable ActivateSceneAsync_Internal(SceneLoader loader) {
+            await loader.ActivateAsync();
+        }
+
         internal static async Awaitable UnloadSceneAsync_Internal(SceneLoader loader) {
             if (loader?.scene.isLoaded != true) {
                 return;
             }
 
-            await loader.UnloadAsync();
+            CreateBarrierIfNeeded();
 
+            await loader.UnloadAsync();
+            sceneUnloaded?.Invoke(loader.scene);
+            
             _loadedScenes.Remove(loader.scene);
 
             if (_handlersCache.TryGetValue(loader.scene, out var handlers)) {
@@ -278,6 +288,21 @@ namespace Onion.SceneManagement {
 
             foreach (var awaitable in awaitables) {
                 await awaitable;
+            }
+        }
+
+        private static void CreateBarrierIfNeeded() {
+            if (loadedScenes.Count > 1) {
+                return;
+            }
+
+            _barrierScene = UniSceneManagement.SceneManager.CreateScene("OnionSceneManagement_Barrier");
+        }
+
+        private static void RemoveBarrierIfExists() {
+            if (_barrierScene.isLoaded) {
+                UniSceneManagement.SceneManager.UnloadSceneAsync(_barrierScene);
+                _barrierScene = default;
             }
         }
 

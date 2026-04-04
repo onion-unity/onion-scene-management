@@ -6,14 +6,14 @@ namespace Onion.SceneManagement.Editor {
     [CanEditMultipleObjects]
     internal sealed class PlaceholderEditor : UnityEditor.Editor {
         private const string bootstrapSceneWarning = "This is the bootstrap scene.\nPlaceholder is not allowed here.";
-        private const string bootstrapSceneInfo = "Bootstrap scene is not enabled in the settings.";
+        private const string bootstrapSceneInfo = "Bootstrap scene is not enabled in the settings.\nPlease enable it to use the placeholder.";
         private const string placeholderInfo = "This object will be destroyed at runtime.";
 
         public override void OnInspectorGUI() {
             // base.OnInspectorGUI();
 
             if (!SceneManagementSettings.useBootstrap) {
-                EditorGUILayout.HelpBox(bootstrapSceneInfo, MessageType.Info);
+                EditorGUILayout.HelpBox(bootstrapSceneInfo, MessageType.Error);
 
                 return;
             }

@@ -30,13 +30,13 @@ namespace Onion.SceneManagement.Setting {
             }
         }
 
-        public bool overlapLoading = false;
 
+        [Tooltip("Whether to load the new scene first before unloading the current scene.")]
+        public bool overlappedLoad = false;
         public bool useBootstrap = false;
 
         [SerializeField]
         internal SceneReference bootstrapScene;
-
 
 #if UNITY_EDITOR
         private BootstrapGroup _bootstrapGroup;

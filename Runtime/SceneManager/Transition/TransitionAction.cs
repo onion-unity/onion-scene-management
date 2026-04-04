@@ -11,6 +11,7 @@ namespace Onion.SceneManagement.Transition {
         internal bool batch;
         internal Scene scene;
         internal SceneReference reference;
+        internal bool activateOnLoad;
         
         internal float waitSeconds;
         internal int waitFrames;
@@ -28,6 +29,14 @@ namespace Onion.SceneManagement.Transition {
         internal static TransitionAction Load(SceneReference reference, bool parallel) {
             return new TransitionAction {
                 type = TransitionActionType.Load,
+                reference = reference,
+                parallel = parallel
+            };
+        }
+
+        internal static TransitionAction Activate(SceneReference reference, bool parallel) {
+            return new TransitionAction {
+                type = TransitionActionType.Activate,
                 reference = reference,
                 parallel = parallel
             };

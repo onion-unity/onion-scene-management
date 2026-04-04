@@ -110,10 +110,11 @@ namespace Onion.SceneManagement.Transition {
                     if (action.batch) { // batch is normally not parellel.
                         var batchActions = ListPool<TransitionAction>.Get();
                         
-                        if      (action.type == TransitionActionType.Load)   CreateLoadBatch(batchActions);
-                        else if (action.type == TransitionActionType.Unload) CreateUnloadBatch(batchActions);
-                        else if (action.type == TransitionActionType.Enter)  CreateEnterBatch(batchActions);
-                        else if (action.type == TransitionActionType.Exit)   CreateExitBatch(batchActions);
+                        if      (action.type == TransitionActionType.Load)     CreateLoadBatch(batchActions);
+                        else if (action.type == TransitionActionType.Activate) CreateActivateBatch(batchActions);
+                        else if (action.type == TransitionActionType.Unload)   CreateUnloadBatch(batchActions);
+                        else if (action.type == TransitionActionType.Enter)    CreateEnterBatch(batchActions);
+                        else if (action.type == TransitionActionType.Exit)     CreateExitBatch(batchActions);
                         else {
                             Debug.LogWarning($"Batch action of type {action.type} is not supported. Skipping batch.");
                         }
@@ -185,11 +186,19 @@ namespace Onion.SceneManagement.Transition {
                         break;
                 }
             }
+
+            _toUnload.RemoveAll(scene => scene.IsPinned());
         }
 
         private void CreateLoadBatch(in List<TransitionAction> actions) {
             foreach (var reference in _toLoad) {
                 actions.Add(TransitionAction.Load(reference, parallel: true));
+            }
+        }
+
+        private void CreateActivateBatch(in List<TransitionAction> actions) {
+            foreach (var reference in _toLoad) {
+                actions.Add(TransitionAction.Activate(reference, parallel: true));
             }
         }
 
@@ -273,6 +282,7 @@ namespace Onion.SceneManagement.Transition {
         private Awaitable Execute_Internal(TransitionAction action) {
             return action.type switch {
                 TransitionActionType.Load   => SceneManager.LoadSceneAsync_Internal(action.reference.CreateLoader()),
+                TransitionActionType.Activate => SceneManager.ActivateSceneAsync_Internal(action.reference.GetLoader()),
                 TransitionActionType.Unload => SceneManager.UnloadSceneAsync_Internal(action.scene.GetLoader()),
 
                 TransitionActionType.Enter      => SceneManager.NotifyEnter_Internal(action.scene, global: false),
@@ -287,7 +297,7 @@ namespace Onion.SceneManagement.Transition {
 
                 TransitionActionType.Delay      => Delay_Internal(action),
                 TransitionActionType.DelayFrame => DelayFrame_Internal(action),
-                TransitionActionType.NextFrame      => Awaitable.NextFrameAsync(),
+                TransitionActionType.NextFrame  => Awaitable.NextFrameAsync(),
 
                 TransitionActionType.WaitForEndOfFrame  => Awaitable.EndOfFrameAsync(),
                 TransitionActionType.WaitForFixedUpdate => Awaitable.FixedUpdateAsync(),

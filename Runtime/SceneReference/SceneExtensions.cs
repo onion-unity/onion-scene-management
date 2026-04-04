@@ -24,5 +24,8 @@ namespace Onion.SceneManagement {
         public static void Pin(this IEnumerable<UniSceneManagement.Scene> scenes) => SceneManager.Pin(scenes);
         public static void Unpin(this UniSceneManagement.Scene scene) => SceneManager.Unpin(scene);
         public static void Unpin(this IEnumerable<UniSceneManagement.Scene> scenes) => SceneManager.Unpin(scenes);
+
+        public static bool IsPinned(this UniSceneManagement.Scene scene) => SceneManager.IsPinned(scene);
+        public static bool ArePinned(this IEnumerable<UniSceneManagement.Scene> scenes) => SceneManager.ArePinned(scenes);
     }
 }

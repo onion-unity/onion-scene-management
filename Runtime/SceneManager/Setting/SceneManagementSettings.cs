@@ -15,7 +15,7 @@ namespace Onion.SceneManagement.Setting {
         internal static void LoadFromAsset_Internal(SceneManagementSettingsAsset asset) {
             useBootstrap = asset.useBootstrap;
             bootstrapScene = asset.bootstrapScene;
-            overlapLoading = asset.overlapLoading;
+            overlapLoading = asset.overlappedLoad;
 #if UNITY_EDITOR
             bootstrapGroup = asset.bootstrapGroup;
 #endif

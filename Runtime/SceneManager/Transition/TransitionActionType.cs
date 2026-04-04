@@ -2,6 +2,7 @@ namespace Onion.SceneManagement.Transition {
     internal enum TransitionActionType {
         None,
         Load,
+        Activate,
         Unload,
         
         Enter,

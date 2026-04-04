@@ -5,12 +5,18 @@ using UnityEngine;
 namespace Onion.SceneManagement.Transition {
     public static class TransitionExtensions {
         // --- Batch Actions ---
-        public static Transition Load(this Transition transition)
+        public static Transition Load(this Transition transition, bool activateOnLoad = true)
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.Load,
+                activateOnLoad = activateOnLoad,
                 batch = true, 
             });
 
+        public static Transition Activate(this Transition transition)
+            => transition.Add(new TransitionAction() {
+                type = TransitionActionType.Activate,
+                batch = true, 
+            });
         public static Transition Unload(this Transition transition)
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.Unload,
