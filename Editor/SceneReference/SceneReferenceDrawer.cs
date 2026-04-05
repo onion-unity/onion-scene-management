@@ -50,7 +50,7 @@ namespace Onion.SceneManagement.Editor
 
         private void ShowMenu(Rect buttonRect, SceneAsset asset) {
             GenericMenu menu = new();
-            menu.AddItem(new GUIContent("Add to Build Settings"), false, () => asset.AddToBuild());
+            menu.AddItem(new GUIContent("Add to Build"), false, () => asset.AddToBuild());
             menu.DropDown(buttonRect);
         }
 
