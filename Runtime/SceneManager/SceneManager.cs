@@ -67,14 +67,38 @@ namespace Onion.SceneManagement {
             _ = LoadSceneAsync(reference, mode);
         }
 
+        public static void LoadScene(int buildIndex, TransitionMode mode = default) {
+            _ = LoadSceneAsync(buildIndex, mode);
+        }
+
+        public static void LoadScene(string name, TransitionMode mode = default) {
+            _ = LoadSceneAsync(name, mode);
+        }
+
         public static void LoadScenes(IEnumerable<SceneReference> references, TransitionMode mode = default) {
             _ = LoadScenesAsync(references, mode);
+        }
+
+        public static void LoadScenes(IEnumerable<int> buildIndices, TransitionMode mode = default) {
+            _ = LoadScenesAsync(buildIndices, mode);
+        }
+
+        public static void LoadScenes(IEnumerable<string> names, TransitionMode mode = default) {
+            _ = LoadScenesAsync(names, mode);
         }
 
         public static Awaitable LoadSceneAsync(SceneReference reference, TransitionMode mode = default) {
             return SceneManagementSettings.overlapLoading
                 ? Transition.Transition.Create(reference, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
                 : Transition.Transition.Create(reference, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
+        }
+
+        public static Awaitable LoadSceneAsync(int buildIndex, TransitionMode mode = default) {
+            return LoadSceneAsync(SceneReference.FromBuildIndex(buildIndex), mode);
+        }
+
+        public static Awaitable LoadSceneAsync(string name, TransitionMode mode = default) {
+            return LoadSceneAsync(SceneReference.FromName(name), mode);
         }
 
         public static Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
@@ -87,12 +111,46 @@ namespace Onion.SceneManagement {
                 : Transition.Transition.Create(references, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
         }
 
+        public static Awaitable LoadScenesAsync(IEnumerable<int> buildIndices, TransitionMode mode = default) {
+            var references = new List<SceneReference>();
+            foreach (var index in buildIndices) {
+                references.Add(SceneReference.FromBuildIndex(index));
+            }
+
+            return LoadScenesAsync(references, mode);
+        }
+
+        public static Awaitable LoadScenesAsync(IEnumerable<string> names, TransitionMode mode = default) {
+            var references = new List<SceneReference>();
+            foreach (var name in names) {
+                references.Add(SceneReference.FromName(name));
+            }
+
+            return LoadScenesAsync(references, mode);
+        }
+
         public static void UnloadScene(SceneReference reference, UnloadMode mode = default) {
             _ = UnloadSceneAsync(reference, mode);
         }
 
+        public static void UnloadScene(int buildIndex, UnloadMode mode = default) {
+            _ = UnloadSceneAsync(buildIndex, mode);
+        }
+
+        public static void UnloadScene(string name, UnloadMode mode = default) {
+            _ = UnloadSceneAsync(name, mode);
+        }
+
         public static void UnloadScenes(IEnumerable<SceneReference> references, UnloadMode mode = default) {
             _ = UnloadScenesAsync(references, mode);
+        }
+
+        public static void UnloadScenes(IEnumerable<int> buildIndices, UnloadMode mode = default) {
+            _ = UnloadScenesAsync(buildIndices, mode);
+        }
+
+        public static void UnloadScenes(IEnumerable<string> names, UnloadMode mode = default) {
+            _ = UnloadScenesAsync(names, mode);
         }
 
         public static Awaitable UnloadSceneAsync(SceneReference reference, UnloadMode mode = default) {
@@ -100,6 +158,14 @@ namespace Onion.SceneManagement {
                 .NotifyExit()
                 .Unload()
                 .ExecuteAsync();
+        }
+
+        public static Awaitable UnloadSceneAsync(int buildIndex, UnloadMode mode = default) {
+            return UnloadSceneAsync(SceneReference.FromBuildIndex(buildIndex), mode);
+        }
+
+        public static Awaitable UnloadSceneAsync(string name, UnloadMode mode = default) {
+            return UnloadSceneAsync(SceneReference.FromName(name), mode);
         }
 
         public static Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references, UnloadMode mode = default) {
@@ -111,6 +177,24 @@ namespace Onion.SceneManagement {
                 .NotifyExit()
                 .Unload()
                 .ExecuteAsync();
+        }
+
+        public static Awaitable UnloadScenesAsync(IEnumerable<int> buildIndices, UnloadMode mode = default) {
+            var references = new List<SceneReference>();
+            foreach (var index in buildIndices) {
+                references.Add(SceneReference.FromBuildIndex(index));
+            }
+
+            return UnloadScenesAsync(references, mode);
+        }
+
+        public static Awaitable UnloadScenesAsync(IEnumerable<string> names, UnloadMode mode = default) {
+            var references = new List<SceneReference>();
+            foreach (var name in names) {
+                references.Add(SceneReference.FromName(name));
+            }
+
+            return UnloadScenesAsync(references, mode);
         }
 
         public static void Pin(UniScene scene) {
