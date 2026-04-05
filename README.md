@@ -69,7 +69,7 @@ await Transition.Create(scenesToLoad)
 
 - Stable scene references by GUID
 - Inspector validation with quick build-setting fixes
-![SceneReference Editor](.github/images/reference_0.png)
+    <img src=".github/images/reference_0.png" width="300">
 
 ## Notes
 
