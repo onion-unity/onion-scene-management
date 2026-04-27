@@ -9,6 +9,9 @@ namespace Onion.SceneManagement.Editor {
             if (deletedAssets.Length > 0) {
                 EditorApplication.delayCall += ValidateSettings;
             }
+            else if (importedAssets.Length > 0) {
+                EditorApplication.delayCall += InitializeOnLoadMethod;
+            }
         }
 
         private static void ValidateSettings() {
@@ -22,6 +25,13 @@ namespace Onion.SceneManagement.Editor {
                 EditorGUIUtility.PingObject(settings);
                 Debug.LogError(deletedAssetMessage);
             }
+        }
+
+        private static void InitializeOnLoadMethod() {
+            if (SceneManagementSettingsProvider.GetSettings() != null) {
+                return;
+            }
+            SceneManagementSettingsProvider.GetOrCreateSettings();
         }
     }
 }
