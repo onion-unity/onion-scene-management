@@ -298,6 +298,11 @@ namespace Onion.SceneManagement {
                 return;
             }
 
+            if (SceneManagementSettings.useBootstrap && loader.scene == SceneManagementSettings.bootstrapScene.scene) {
+                // Debug.LogWarning("Cannot unload the bootstrap scene.");
+                return;
+            }
+
             CreateBarrierIfNeeded();
 
             await loader.UnloadAsync();

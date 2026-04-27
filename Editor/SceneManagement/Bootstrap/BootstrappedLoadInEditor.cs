@@ -32,6 +32,9 @@ namespace Onion.SceneManagement.Editor {
             var group = SceneManagementSettings.bootstrapGroup;
             if (group != null) {
                 await group.LoadAsync();
+
+                group.scenes.Clear();
+                AssetDatabase.SaveAssets();
             }
         }
 
@@ -60,7 +63,8 @@ namespace Onion.SceneManagement.Editor {
 
                         group.scenes.Add(SceneReference.FromPath(scene.path));
                     }
-
+                    
+                    AssetDatabase.SaveAssets();
                     EditorSceneManager.playModeStartScene = bootstrapScene.asset;
 
                     break;
