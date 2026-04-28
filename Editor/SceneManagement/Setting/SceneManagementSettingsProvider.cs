@@ -7,10 +7,11 @@ using UnityEngine;
 using UnityEngine.Pool;
 
 namespace Onion.SceneManagement.Editor {
+    [InitializeOnLoad]
     internal static class SceneManagementSettingsProvider {
         private static readonly UnityPath settingsDirectory = new("Assets/Settings/");
         private static readonly UnityPath settingsPath = new(Path.Combine(settingsDirectory, "Onion_SceneManagementSetting.asset"));
-        private static readonly UnityPath settingsProviderPath = new("Project/Onion Scene Management");
+        // private static readonly UnityPath settingsProviderPath = new("Project/Onion Scene Management");
 
         // [SettingsProvider]
         // public static SettingsProvider CreateProvider() {
@@ -40,6 +41,10 @@ namespace Onion.SceneManagement.Editor {
         //         RegisterToPreloadAssets(asset);
         //     }
         // }
+
+        static SceneManagementSettingsProvider() {
+            EditorApplication.delayCall += () => GetOrCreateSettings();
+        }
 
         internal static SceneManagementSettingsAsset GetSettings() {
             foreach (var obj in PlayerSettings.GetPreloadedAssets()) {
@@ -79,6 +84,7 @@ namespace Onion.SceneManagement.Editor {
 
                 AssetDatabase.CreateAsset(asset, settingsPath);
                 AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
 
             AssignSettings(asset);
