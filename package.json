@@ -1,6 +1,6 @@
 {
   "name": "com.onion.scenemanagement",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "displayName": "Onion Scene Management",
   "description": "Scene management system for Unity.",
   "unity": "6000.0",

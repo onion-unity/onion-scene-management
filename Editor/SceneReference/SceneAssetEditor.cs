@@ -1,7 +1,10 @@
 using System.Linq;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
 using UnityEngine;
+
+#if ONION_ADDRESSABLES
+using UnityEditor.AddressableAssets;
+#endif
 
 namespace Onion.SceneManagement.Editor {
     [CanEditMultipleObjects]
