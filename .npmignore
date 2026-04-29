@@ -2,5 +2,3 @@
 .git/
 .gitignore
 .editorconfig
-*.md
-*.md.meta
