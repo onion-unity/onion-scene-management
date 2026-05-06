@@ -25,6 +25,11 @@ namespace Onion.SceneManagement {
             _loadedScenes.Clear();
             _handlersCache.Clear();
 
+            InitializeExistingScene();
+            LoadInitialScenesIfNeeded();
+        }
+
+        private static void InitializeExistingScene() {
             for (int i = 0; i < UniSceneManagement.SceneManager.sceneCount; i++) {
                 var scene = UniSceneManagement.SceneManager.GetSceneAt(i);
                 if (SceneManagementSettings.useBootstrap && SceneManagementSettings.canUseBootstrapScene) {
@@ -33,7 +38,7 @@ namespace Onion.SceneManagement {
                     if (scene == bootstrapScene) {
                         Bootstrapper.isReady = true;
 
-                        Debug.Log($"Bootstrap scene '{bootstrapScene.name}' is loaded.");
+                        // Debug.Log($"Bootstrap scene '{bootstrapScene.name}' is loaded.");
                     }
                 }
 
@@ -59,6 +64,24 @@ namespace Onion.SceneManagement {
                 _ = NotifyAsyncEnter_Internal(scene);
                 _ = NotifyAsyncEnter_Internal(scene, global: true);
             }
+        }
+
+        private static void LoadInitialScenesIfNeeded() {
+            if (!SceneManagementSettings.canUseBootstrapScene) {
+                return;
+            }
+
+#if UNITY_EDITOR
+            if (!Bootstrapper.isReady || _handlersCache.Count > 1) {
+                return;
+            }
+#endif
+            var initialScenes = SceneManagementSettings.initialScenes;
+            if (initialScenes.IsNullOrEmpty()) {
+                return;
+            }
+
+            initialScenes.Load();
         }
 
         // --- Public API ---
