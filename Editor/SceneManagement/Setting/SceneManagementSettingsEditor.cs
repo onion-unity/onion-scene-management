@@ -29,6 +29,13 @@ namespace Onion.SceneManagement.Editor {
 
                         DrawBootstrapSceneField(iter);
                         break;
+                    case nameof(SceneManagementSettingsAsset.initialScene):
+                        if (!SceneManagementSettings.useBootstrap) {
+                            break;
+                        }
+
+                        EditorGUILayout.PropertyField(iter);
+                        break;
                     default: EditorGUILayout.PropertyField(iter); break;
                 }
             }
