@@ -39,7 +39,7 @@ namespace Onion.SceneManagement.Setting {
         internal SceneReference bootstrapScene;
 
         [SerializeField]
-        internal SceneReference initialScene;
+        internal SceneReference[] initialScenes;
 
 #if UNITY_EDITOR
         private BootstrapGroup _bootstrapGroup;

@@ -4,7 +4,7 @@ namespace Onion.SceneManagement.Setting {
     public static class SceneManagementSettings {
         public static bool useBootstrap = false;
         internal static SceneReference bootstrapScene = default;
-        internal static SceneReference initialScene = default;
+        internal static SceneReference[] initialScenes = default;
 
         public static bool overlapLoading = false;
         public static bool canUseBootstrapScene =>
@@ -17,7 +17,7 @@ namespace Onion.SceneManagement.Setting {
         internal static void LoadFromAsset_Internal(SceneManagementSettingsAsset asset) {
             useBootstrap = asset.useBootstrap;
             bootstrapScene = asset.bootstrapScene;
-            initialScene = asset.initialScene;
+            initialScenes = asset.initialScenes;
             overlapLoading = asset.overlappedLoad;
 #if UNITY_EDITOR
             bootstrapGroup = asset.bootstrapGroup;

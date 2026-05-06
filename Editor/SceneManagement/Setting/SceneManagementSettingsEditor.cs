@@ -29,7 +29,7 @@ namespace Onion.SceneManagement.Editor {
 
                         DrawBootstrapSceneField(iter);
                         break;
-                    case nameof(SceneManagementSettingsAsset.initialScene):
+                    case nameof(SceneManagementSettingsAsset.initialScenes):
                         if (!SceneManagementSettings.useBootstrap) {
                             break;
                         }
