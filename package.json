@@ -1,13 +1,23 @@
 {
   "name": "com.onion.scenemanagement",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "displayName": "Onion Scene Management",
-  "description": "Scene management system for Unity.",
+  "description": "Async scene loading and unloading, GUID-based scene references that survive renames and moves, fluent transition flows with enter/exit handlers, and Bootstrap scene support.",
+  "keywords": [
+    "scene",
+    "scene management",
+    "scene reference",
+    "transition",
+    "bootstrap",
+    "addressables"
+  ],
   "unity": "6000.0",
   "author": {
     "name": "Seungbin"
   },
   "hideInEditor": false,
+  "changelogUrl": "https://github.com/onion-unity/onion-scene-management/blob/main/CHANGELOG.md",
+  "documentationUrl": "https://github.com/onion-unity/onion-scene-management#readme",
   "repository": {
     "url": "https://github.com/onion-unity/onion-scene-management.git",
     "type": "git"
