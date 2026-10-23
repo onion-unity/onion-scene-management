@@ -6,7 +6,7 @@ namespace Onion.SceneManagement.Editor {
         private const string deletedAssetMessage = "Don't delete the Scene Management Settings asset!\nIt is required for the proper functioning of the Onion Scene Management system.\nA new settings asset has been created to replace the deleted one.";
 
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths) {
-            if (deletedAssets.Length > 0) {
+            if (deletedAssets.Length > 0 && !Application.isBatchMode) {
                 EditorApplication.delayCall += ValidateSettings;
             }
         }

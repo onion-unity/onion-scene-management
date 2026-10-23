@@ -6,6 +6,12 @@ namespace Onion.SceneManagement {
     internal static class SceneLoaderExtensions {
         private static readonly Dictionary<Scene, SceneLoader> _loaders = new();
 
+        // Loaders of the previous Play session's scenes would otherwise survive when domain reload is off.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() {
+            _loaders.Clear();
+        }
+
         public static void Register(this Scene scene, SceneLoader loader) {
             if (!scene.IsValid()) {
                 return;

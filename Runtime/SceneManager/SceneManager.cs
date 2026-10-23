@@ -20,6 +20,15 @@ namespace Onion.SceneManagement {
         public static event Action<UniScene> sceneLoaded;
         public static event Action<UniScene> sceneUnloaded;
 
+        // Keeps the previous Play session's state out of the next one when domain reload is off.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() {
+            _pinnedScenes.Clear();
+            _barrierScene = default;
+            sceneLoaded = null;
+            sceneUnloaded = null;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Initialize() {
             _loadedScenes.Clear();

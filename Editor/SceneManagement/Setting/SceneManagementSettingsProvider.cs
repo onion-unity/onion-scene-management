@@ -43,6 +43,11 @@ namespace Onion.SceneManagement.Editor {
         // }
 
         static SceneManagementSettingsProvider() {
+            // Never create assets on build servers.
+            if (Application.isBatchMode) {
+                return;
+            }
+
             EditorApplication.delayCall += () => GetOrCreateSettings();
         }
 
