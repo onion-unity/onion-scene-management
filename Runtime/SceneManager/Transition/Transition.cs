@@ -355,7 +355,7 @@ namespace Onion.SceneManagement.Transition {
                 return;
             }
 
-            while (!action.condition()) {
+            while (action.condition()) {
                 await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
             }
         }
@@ -365,7 +365,7 @@ namespace Onion.SceneManagement.Transition {
                 return;
             }
 
-            while (action.condition()) {
+            while (!action.condition()) {
                 await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
             }
         }
