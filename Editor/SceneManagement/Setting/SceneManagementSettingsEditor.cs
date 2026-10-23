@@ -50,6 +50,9 @@ namespace Onion.SceneManagement.Editor {
             if (!isAssigned) {
                 EditorGUILayout.HelpBox("Bootstrap scene is not assigned.\nPlease create or assign a bootstrap scene.", MessageType.Warning);
             }
+            else {
+                DrawSceneOrderWarning(AssetDatabase.GetAssetPath(assetProp.objectReferenceValue));
+            }
 
             using var _ = new EditorGUILayout.HorizontalScope();
             EditorGUILayout.PropertyField(prop);
@@ -77,6 +80,19 @@ namespace Onion.SceneManagement.Editor {
 
                     EditorGUIUtility.PingObject(asset);
                 }
+            }
+        }
+
+        private void DrawSceneOrderWarning(string bootstrapPath) {
+            if (BootstrapSceneOrder.IsFirstInActiveSceneList(bootstrapPath)) {
+                return;
+            }
+
+            using var _ = new EditorGUILayout.HorizontalScope();
+            EditorGUILayout.HelpBox("Bootstrap scene must be the first enabled scene in the Build Profile scene list.\nBuilds fail until it is.", MessageType.Warning);
+
+            if (GUILayout.Button("Fix", GUILayout.Width(60), GUILayout.ExpandHeight(true))) {
+                BootstrapSceneOrder.MoveToFirst(bootstrapPath);
             }
         }
 

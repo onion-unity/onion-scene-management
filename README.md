@@ -127,7 +127,7 @@ public class TitleScreen : MonoBehaviour, ISceneEnterHandler, IAsyncSceneExitHan
 
 A Bootstrap scene holds objects that live for the whole game (managers, services). Turn on **Use Bootstrap** in the settings and assign the **Bootstrap Scene** (the inspector can create one).
 
-- In a build, put the Bootstrap scene first in the scene list. The **Initial Scenes** are loaded after it on startup.
+- In a build, the Bootstrap scene must be the first scene: the build fails otherwise, and the settings inspector shows a warning with a **Fix** button that moves it to the top of the Build Profile scene list. The **Initial Scenes** are loaded after it on startup.
 - In the Editor, entering Play Mode always starts from the Bootstrap scene, then reopens the scenes that were open.
 - The Bootstrap scene is never unloaded, and it gets no exit notifications.
 - Add a `Placeholder` component to objects a scene only needs when opened on its own (for example a camera). It is destroyed when the Bootstrap scene is running and removed from builds.

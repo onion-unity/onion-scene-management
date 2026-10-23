@@ -10,6 +10,8 @@ All notable changes to this package are documented in this file.
 - `WaitWhile` and `WaitUntil` were swapped and now behave like Unity's: `WaitWhile` waits while the condition is true, `WaitUntil` waits until it becomes true. Swap any calls written against the old behavior.
 - A `Transition` created with no destinations and run with `UnloadMode.CleanUp` now unloads every loaded scene except pinned scenes and the Bootstrap scene. Before, it did nothing.
 
+- With Use Bootstrap on, a player build now fails unless the Bootstrap scene is the first scene being built. The settings inspector warns when it isn't first in the active Build Profile scene list and has a **Fix** button; a player whose first scene isn't the Bootstrap scene logs an error on startup.
+
 ### Changed
 
 - The settings asset is now registered in `EditorBuildSettings` (config key `com.onion.scenemanagement`) instead of permanently in Preloaded Assets. It is added to Preloaded Assets only while a player build runs, so Project Settings no longer change.

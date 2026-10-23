@@ -34,6 +34,14 @@ namespace Onion.SceneManagement {
             _loadedScenes.Clear();
             _handlersCache.Clear();
 
+#if !UNITY_EDITOR
+            // The build is checked too (BootstrapSceneBuildProcessor), but a misplaced Bootstrap scene fails silently otherwise.
+            if (SceneManagementSettings.useBootstrap
+                && (!SceneManagementSettings.canUseBootstrapScene || SceneManagementSettings.bootstrapScene.buildIndex != 0)) {
+                Debug.LogError("Use Bootstrap is on, but the Bootstrap scene is not the first scene in the build.");
+            }
+#endif
+
             InitializeExistingScene();
             LoadInitialScenesIfNeeded();
         }
