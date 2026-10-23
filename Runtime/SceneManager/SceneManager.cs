@@ -187,7 +187,10 @@ namespace Onion.SceneManagement {
         }
 
         public static Awaitable UnloadSceneAsync(SceneReference reference) {
-            return UnloadScenesAsync(new[] { reference });
+            using var pool = HashSetPool<UniScene>.Get(out var targets);
+            AddUnloadTarget(reference, targets);
+
+            return UnloadTargetsAsync(targets);
         }
 
         public static Awaitable UnloadSceneAsync(int buildIndex) {
@@ -198,40 +201,54 @@ namespace Onion.SceneManagement {
             return UnloadSceneAsync(SceneReference.FromName(name));
         }
 
-        // Unloading is a transition to the scenes that stay loaded, so CleanUp unloads exactly the given ones.
-        // async so an empty list still returns an Awaitable that can be awaited, not null.
-        public static async Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references) {
-            if (references.IsNullOrEmpty()) {
+        public static Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references) {
+            using var pool = HashSetPool<UniScene>.Get(out var targets);
+            if (references != null) {
+                foreach (var reference in references) {
+                    AddUnloadTarget(reference, targets);
+                }
+            }
+
+            return UnloadTargetsAsync(targets);
+        }
+
+        private static void AddUnloadTarget(SceneReference reference, HashSet<UniScene> targets) {
+            if (reference.type == SceneReferenceType.None) {
+                Debug.LogError($"Scene (GUID: {reference.guid}) cannot be unloaded. Assign a scene and add it to the Build Profile scene list or to Addressables.");
                 return;
             }
 
-            var targets = new HashSet<UniScene>();
-            foreach (var reference in references) {
-                if (reference.type == SceneReferenceType.None) {
-                    Debug.LogError($"Scene (GUID: {reference.guid}) cannot be unloaded. Assign a scene and add it to the Build Profile scene list or to Addressables.");
-                    continue;
-                }
-
-                if (reference.isLoaded) {
-                    targets.Add(reference.scene);
-                }
+            if (reference.isLoaded) {
+                targets.Add(reference.scene);
             }
+        }
 
+        // Unloading is a transition to the scenes that stay loaded, so CleanUp unloads exactly the targets.
+        // async so no targets still returns an Awaitable that can be awaited, not null.
+        // Everything before the await runs synchronously, so callers may release the pooled targets once it returns.
+        private static async Awaitable UnloadTargetsAsync(HashSet<UniScene> targets) {
             if (targets.Count == 0) {
                 return;
             }
 
-            // Pinning only protects scenes from CleanUp; naming a scene here unloads it anyway.
-            Unpin(targets);
-
-            var remaining = new List<SceneReference>();
-            foreach (var scene in _loadedScenes) {
-                if (!targets.Contains(scene)) {
-                    remaining.Add(SceneReference.FromScene(scene));
+            Transition.Transition transition;
+            using (ListPool<SceneReference>.Get(out var remaining)) {
+                foreach (var scene in targets) {
+                    // Pinning only protects scenes from CleanUp; naming a scene here unloads it anyway.
+                    Unpin(scene);
                 }
+
+                foreach (var scene in _loadedScenes) {
+                    if (!targets.Contains(scene)) {
+                        remaining.Add(SceneReference.FromScene(scene));
+                    }
+                }
+
+                // Create copies the destinations, so the pooled list can be released right after.
+                transition = Transition.Transition.Create(remaining, TransitionMode.Default);
             }
 
-            await Transition.Transition.Create(remaining, TransitionMode.Default)
+            await transition
                 .NotifyExit()
                 .Unload()
                 .ExecuteAsync();
@@ -387,7 +404,9 @@ namespace Onion.SceneManagement {
         internal static Awaitable NotifyEnter_Internal(UniScene scene, bool global = false) {
             if (_handlersCache.TryGetValue(scene, out var handlers)) {
                 var list = global ? handlers.enter.always : handlers.enter.normal;
-                foreach (var handler in list) {
+
+                for (int i = 0; i < list.Count; i++) {
+                    var handler = list[i];
                     if (IsHandlerDestroyed(handler)) continue;
 
                     handler.OnSceneEnter();
@@ -405,7 +424,8 @@ namespace Onion.SceneManagement {
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
             var list = global ? handlers.asyncEnter.always : handlers.asyncEnter.normal;
-            foreach (var handler in list) {
+            for (int i = 0; i < list.Count; i++) {
+                var handler = list[i];
                 if (IsHandlerDestroyed(handler)) continue;
 
                 awaitables.Add(handler.OnSceneEnterAsync());
@@ -419,7 +439,9 @@ namespace Onion.SceneManagement {
         internal static Awaitable NotifyExit_Internal(UniScene scene, bool global = false) {
             if (_handlersCache.TryGetValue(scene, out var handlers)) {
                 var list = global ? handlers.exit.always : handlers.exit.normal;
-                foreach (var handler in list) {
+                
+                for (int i = 0; i < list.Count; i++) {
+                    var handler = list[i];
                     if (IsHandlerDestroyed(handler)) continue;
 
                     handler.OnSceneExit();
@@ -437,7 +459,8 @@ namespace Onion.SceneManagement {
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
             var list = global ? handlers.asyncExit.always : handlers.asyncExit.normal;
-            foreach (var handler in list) {
+            for (int i = 0; i < list.Count; i++) {
+                var handler = list[i];
                 if (IsHandlerDestroyed(handler)) continue;
 
                 awaitables.Add(handler.OnSceneExitAsync());

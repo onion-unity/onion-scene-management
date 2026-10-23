@@ -45,7 +45,7 @@ namespace Onion.SceneManagement.Transition {
 
         public static Transition Callback(this Transition transition, Func<Awaitable> asyncCallback, bool parallel = false)
             => transition.Add(new TransitionAction() {
-                type = TransitionActionType.Callback,
+                type = TransitionActionType.CallbackAsync,
                 asyncCallback = asyncCallback,
                 parallel = parallel,
             });

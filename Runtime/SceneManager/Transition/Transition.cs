@@ -7,7 +7,8 @@ using Onion.SceneManagement.Setting;
 
 namespace Onion.SceneManagement.Transition {
     public sealed class Transition {
-        private const int initialCapacity = 16;
+        // A typical transition has 4-6 actions; the collections grow when needed.
+        private const int initialCapacity = 4;
 
         private readonly List<SceneReference> _destinations = new(initialCapacity);
         private readonly List<TransitionAction> _actions = new(initialCapacity);
