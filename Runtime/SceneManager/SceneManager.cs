@@ -133,14 +133,15 @@ namespace Onion.SceneManagement {
             return LoadSceneAsync(SceneReference.FromName(name), mode);
         }
 
-        public static Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
+        // async so an empty list still returns an Awaitable that can be awaited, not null.
+        public static async Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
             if (references.IsNullOrEmpty()) {
-                return null;
+                return;
             }
 
-            return SceneManagementSettings.overlapLoading
+            await (SceneManagementSettings.overlapLoading
                 ? Transition.Transition.Create(references, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
-                : Transition.Transition.Create(references, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
+                : Transition.Transition.Create(references, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync());
         }
 
         public static Awaitable LoadScenesAsync(IEnumerable<int> buildIndices, TransitionMode mode = default) {
@@ -200,12 +201,13 @@ namespace Onion.SceneManagement {
             return UnloadSceneAsync(SceneReference.FromName(name), mode);
         }
 
-        public static Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references, UnloadMode mode = default) {
+        // async so an empty list still returns an Awaitable that can be awaited, not null.
+        public static async Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references, UnloadMode mode = default) {
             if (references.IsNullOrEmpty()) {
-                return null;
+                return;
             }
 
-            return Transition.Transition.Create(references, new() { unloadMode = mode })
+            await Transition.Transition.Create(references, new() { unloadMode = mode })
                 .NotifyExit()
                 .Unload()
                 .ExecuteAsync();
@@ -304,11 +306,15 @@ namespace Onion.SceneManagement {
         // --- internal API ---
 
         internal static async Awaitable LoadSceneAsync_Internal(SceneLoader loader) {
-            if (loader?.scene.isLoaded == true) {
+            if (loader == null || loader.scene.isLoaded) {
                 return;
             }
 
             await loader.LoadAsync();
+            if (!loader.scene.IsValid()) {
+                return;
+            }
+
             sceneLoaded?.Invoke(loader.scene);
 
             RemoveBarrierIfExists();
@@ -322,6 +328,10 @@ namespace Onion.SceneManagement {
         }
 
         internal static async Awaitable ActivateSceneAsync_Internal(SceneLoader loader) {
+            if (loader == null) {
+                return;
+            }
+
             await loader.ActivateAsync();
         }
 

@@ -22,23 +22,23 @@ namespace Onion.SceneManagement.Transition {
         internal Transition() { }
 
         public static Transition Create(IEnumerable<SceneReference> destinations) {
-            return TransitionPool.Get()
+            return new Transition()
                 .To(destinations);
         }
 
         public static Transition Create(SceneReference destination) {
-            return TransitionPool.Get()
+            return new Transition()
                 .To(destination);
         }
 
         public static Transition Create(IEnumerable<SceneReference> destinations, TransitionMode mode) {
-            return TransitionPool.Get()
+            return new Transition()
                 .To(destinations)
                 .Mode(mode);
         }
 
         public static Transition Create(SceneReference destination, TransitionMode mode) {
-            return TransitionPool.Get()
+            return new Transition()
                 .To(destination)
                 .Mode(mode);
         }
@@ -70,10 +70,6 @@ namespace Onion.SceneManagement.Transition {
             return this;
         }
 
-        internal void Init() {
-            _isUsed = false;
-        }
-        
         internal void Clear() {
             _destinations.Clear();
             _actions.Clear();
@@ -140,8 +136,9 @@ namespace Onion.SceneManagement.Transition {
                 await WaitForParallels();
             }
             finally {
+                // Not pooled: a caller may still hold this instance, and a pooled one could later
+                // pass the _isUsed check while running another caller's transition.
                 Clear();
-                TransitionPool.Release(this);
             }
         }
 
@@ -160,6 +157,12 @@ namespace Onion.SceneManagement.Transition {
             }
             
             foreach (var destination in _destinations) {
+                // No loader can be created for it, so every batch skips it.
+                if (destination.type == SceneReferenceType.None) {
+                    Debug.LogError($"Scene (GUID: {destination.guid}) cannot be loaded. Assign a scene and add it to the Build Profile scene list or to Addressables.");
+                    continue;
+                }
+
                 if (_mode.unloadMode == UnloadMode.CleanUp) {
                     _toUnload.Remove(destination.scene);
                 }

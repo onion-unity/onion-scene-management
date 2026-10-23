@@ -48,6 +48,13 @@ namespace Onion.SceneManagement {
             _operation = UniSceneManager.LoadSceneAsync(
                 reference.path,
                 UniSceneManagement.LoadSceneMode.Additive);
+
+            // Unity has already logged why (e.g. the scene isn't in the Build Profile scene list).
+            if (_operation == null) {
+                UniSceneManager.sceneLoaded -= OnSceneLoaded;
+                return;
+            }
+
             _operation.allowSceneActivation = activateOnLoad;
 
             while (_operation.progress < loadThreshold) {
