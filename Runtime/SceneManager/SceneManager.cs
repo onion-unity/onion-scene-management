@@ -162,73 +162,97 @@ namespace Onion.SceneManagement {
             return LoadScenesAsync(references, mode);
         }
 
-        public static void UnloadScene(SceneReference reference, UnloadMode mode = default) {
-            _ = UnloadSceneAsync(reference, mode);
+        public static void UnloadScene(SceneReference reference) {
+            _ = UnloadSceneAsync(reference);
         }
 
-        public static void UnloadScene(int buildIndex, UnloadMode mode = default) {
-            _ = UnloadSceneAsync(buildIndex, mode);
+        public static void UnloadScene(int buildIndex) {
+            _ = UnloadSceneAsync(buildIndex);
         }
 
-        public static void UnloadScene(string name, UnloadMode mode = default) {
-            _ = UnloadSceneAsync(name, mode);
+        public static void UnloadScene(string name) {
+            _ = UnloadSceneAsync(name);
         }
 
-        public static void UnloadScenes(IEnumerable<SceneReference> references, UnloadMode mode = default) {
-            _ = UnloadScenesAsync(references, mode);
+        public static void UnloadScenes(IEnumerable<SceneReference> references) {
+            _ = UnloadScenesAsync(references);
         }
 
-        public static void UnloadScenes(IEnumerable<int> buildIndices, UnloadMode mode = default) {
-            _ = UnloadScenesAsync(buildIndices, mode);
+        public static void UnloadScenes(IEnumerable<int> buildIndices) {
+            _ = UnloadScenesAsync(buildIndices);
         }
 
-        public static void UnloadScenes(IEnumerable<string> names, UnloadMode mode = default) {
-            _ = UnloadScenesAsync(names, mode);
+        public static void UnloadScenes(IEnumerable<string> names) {
+            _ = UnloadScenesAsync(names);
         }
 
-        public static Awaitable UnloadSceneAsync(SceneReference reference, UnloadMode mode = default) {
-            return Transition.Transition.Create(reference, new() { unloadMode = mode })
-                .NotifyExit()
-                .Unload()
-                .ExecuteAsync();
+        public static Awaitable UnloadSceneAsync(SceneReference reference) {
+            return UnloadScenesAsync(new[] { reference });
         }
 
-        public static Awaitable UnloadSceneAsync(int buildIndex, UnloadMode mode = default) {
-            return UnloadSceneAsync(SceneReference.FromBuildIndex(buildIndex), mode);
+        public static Awaitable UnloadSceneAsync(int buildIndex) {
+            return UnloadSceneAsync(SceneReference.FromBuildIndex(buildIndex));
         }
 
-        public static Awaitable UnloadSceneAsync(string name, UnloadMode mode = default) {
-            return UnloadSceneAsync(SceneReference.FromName(name), mode);
+        public static Awaitable UnloadSceneAsync(string name) {
+            return UnloadSceneAsync(SceneReference.FromName(name));
         }
 
+        // Unloading is a transition to the scenes that stay loaded, so CleanUp unloads exactly the given ones.
         // async so an empty list still returns an Awaitable that can be awaited, not null.
-        public static async Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references, UnloadMode mode = default) {
+        public static async Awaitable UnloadScenesAsync(IEnumerable<SceneReference> references) {
             if (references.IsNullOrEmpty()) {
                 return;
             }
 
-            await Transition.Transition.Create(references, new() { unloadMode = mode })
+            var targets = new HashSet<UniScene>();
+            foreach (var reference in references) {
+                if (reference.type == SceneReferenceType.None) {
+                    Debug.LogError($"Scene (GUID: {reference.guid}) cannot be unloaded. Assign a scene and add it to the Build Profile scene list or to Addressables.");
+                    continue;
+                }
+
+                if (reference.isLoaded) {
+                    targets.Add(reference.scene);
+                }
+            }
+
+            if (targets.Count == 0) {
+                return;
+            }
+
+            // Pinning only protects scenes from CleanUp; naming a scene here unloads it anyway.
+            Unpin(targets);
+
+            var remaining = new List<SceneReference>();
+            foreach (var scene in _loadedScenes) {
+                if (!targets.Contains(scene)) {
+                    remaining.Add(SceneReference.FromScene(scene));
+                }
+            }
+
+            await Transition.Transition.Create(remaining, TransitionMode.Default)
                 .NotifyExit()
                 .Unload()
                 .ExecuteAsync();
         }
 
-        public static Awaitable UnloadScenesAsync(IEnumerable<int> buildIndices, UnloadMode mode = default) {
+        public static Awaitable UnloadScenesAsync(IEnumerable<int> buildIndices) {
             var references = new List<SceneReference>();
             foreach (var index in buildIndices) {
                 references.Add(SceneReference.FromBuildIndex(index));
             }
 
-            return UnloadScenesAsync(references, mode);
+            return UnloadScenesAsync(references);
         }
 
-        public static Awaitable UnloadScenesAsync(IEnumerable<string> names, UnloadMode mode = default) {
+        public static Awaitable UnloadScenesAsync(IEnumerable<string> names) {
             var references = new List<SceneReference>();
             foreach (var name in names) {
                 references.Add(SceneReference.FromName(name));
             }
 
-            return UnloadScenesAsync(references, mode);
+            return UnloadScenesAsync(references);
         }
 
         public static void Pin(UniScene scene) {
@@ -351,6 +375,8 @@ namespace Onion.SceneManagement {
             sceneUnloaded?.Invoke(loader.scene);
             
             _loadedScenes.Remove(loader.scene);
+            // An unloaded scene's handle is dead; an explicitly unloaded pinned scene must not stay pinned.
+            _pinnedScenes.Remove(loader.scene);
 
             if (_handlersCache.TryGetValue(loader.scene, out var handlers)) {
                 handlers.Clear();

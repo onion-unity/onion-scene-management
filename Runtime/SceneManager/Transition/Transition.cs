@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
+using Onion.SceneManagement.Setting;
 
 namespace Onion.SceneManagement.Transition {
     public sealed class Transition {
@@ -146,10 +147,7 @@ namespace Onion.SceneManagement.Transition {
             _toLoad.Clear();
             _toUnload.Clear();
 
-            if (_destinations.Count == 0) {
-                return;
-            }
-
+            // No destinations is a valid target state: with CleanUp, everything that isn't pinned is unloaded.
             var loadedScenes = SceneManager.loadedScenes;
 
             if (_mode.unloadMode == UnloadMode.CleanUp) {
@@ -189,7 +187,13 @@ namespace Onion.SceneManagement.Transition {
                 }
             }
 
-            _toUnload.RemoveAll(scene => scene.IsPinned());
+            // The bootstrap scene is never unloaded, so it must not get exit notifications either.
+            _toUnload.RemoveAll(scene => scene.IsPinned() || IsBootstrapScene(scene));
+        }
+
+        private static bool IsBootstrapScene(Scene scene) {
+            return SceneManagementSettings.canUseBootstrapScene
+                && scene == SceneManagementSettings.bootstrapScene.scene;
         }
 
         private void CreateLoadBatch(in List<TransitionAction> actions) {
