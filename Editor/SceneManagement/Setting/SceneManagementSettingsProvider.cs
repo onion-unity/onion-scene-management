@@ -52,6 +52,47 @@ namespace Onion.SceneManagement.Editor {
         }
 
         internal static SceneManagementSettingsAsset GetSettings() {
+            return SceneManagementSettingsAsset.instance;
+        }
+
+        internal static void AssignSettings(SceneManagementSettingsAsset settings) {
+            EditorBuildSettings.AddConfigObject(SceneManagementSettingsAsset.ConfigKey, settings, true);
+            SceneManagementSettings.Reload_Internal();
+        }
+
+        internal static SceneManagementSettingsAsset GetOrCreateSettings() {
+            SceneManagementSettingsAsset asset = GetSettings();
+            if (asset == null) {
+                asset = FindPreloadedSettings();
+            }
+
+            if (asset == null) {
+                string[] guids = AssetDatabase.FindAssets($"t:{nameof(SceneManagementSettingsAsset)}");
+                if (guids.Length > 0) {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+
+                    asset = AssetDatabase.LoadAssetAtPath<SceneManagementSettingsAsset>(path);
+                }
+                else {
+                    asset = ScriptableObject.CreateInstance<SceneManagementSettingsAsset>();
+
+                    if (!Directory.Exists(settingsDirectory.platformPath)) {
+                        Directory.CreateDirectory(settingsDirectory.platformPath);
+                    }
+
+                    AssetDatabase.CreateAsset(asset, settingsPath);
+                    AssetDatabase.SaveAssets();
+                    AssetDatabase.Refresh();
+                }
+            }
+
+            AssignSettings(asset);
+            RemoveLegacyData(asset);
+            return asset;
+        }
+
+        // Projects from before the config key kept the settings registered in Preloaded Assets.
+        private static SceneManagementSettingsAsset FindPreloadedSettings() {
             foreach (var obj in PlayerSettings.GetPreloadedAssets()) {
                 if (obj is SceneManagementSettingsAsset settings) {
                     return settings;
@@ -61,45 +102,29 @@ namespace Onion.SceneManagement.Editor {
             return null;
         }
 
-        internal static void AssignSettings(SceneManagementSettingsAsset settings) {
-            RegisterToPreloadAssets(settings);
+        /// <summary>
+        /// Removes what earlier versions left behind: the permanent Preloaded Assets entry
+        /// (also left by a build that failed before its postprocess) and the saved hideFlags.
+        /// </summary>
+        private static void RemoveLegacyData(SceneManagementSettingsAsset settings) {
+            RemoveFromPreloadedAssets();
 
-            SceneManagementSettingsAsset.instance = settings;
+            if (settings.hideFlags != HideFlags.None) {
+                settings.hideFlags = HideFlags.None;
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssetIfDirty(settings);
+            }
         }
 
-        internal static SceneManagementSettingsAsset GetOrCreateSettings() {
-            SceneManagementSettingsAsset asset = GetSettings();
-            if (asset != null) {
-                return asset;
+        private static void RemoveFromPreloadedAssets() {
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
+            if (Array.FindIndex(preloadedAssets, obj => obj is SceneManagementSettingsAsset) < 0) {
+                return;
             }
 
-            string[] guids = AssetDatabase.FindAssets($"t:{nameof(SceneManagementSettingsAsset)}");
-            if (guids.Length > 0) {
-                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-
-                asset = AssetDatabase.LoadAssetAtPath<SceneManagementSettingsAsset>(path);
-            }
-            else {
-                asset = ScriptableObject.CreateInstance<SceneManagementSettingsAsset>();
-                // SceneManagementSettings.Sync_Internal(asset);
-
-                if (!Directory.Exists(settingsDirectory.platformPath)) {
-                    Directory.CreateDirectory(settingsDirectory.platformPath);
-                }
-
-                AssetDatabase.CreateAsset(asset, settingsPath);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-            }
-
-            AssignSettings(asset);
-            return asset;
-        }
-
-        private static void RegisterToPreloadAssets(SceneManagementSettingsAsset settings) {
             using var pool = ListPool<UnityEngine.Object>.Get(out var list);
 
-            foreach (var asset in PlayerSettings.GetPreloadedAssets()) {
+            foreach (var asset in preloadedAssets) {
                 if (asset is SceneManagementSettingsAsset) {
                     continue;
                 }
@@ -107,10 +132,6 @@ namespace Onion.SceneManagement.Editor {
                 list.Add(asset);
             }
 
-            if (settings != null) {
-                list.Add(settings);
-            }
-            
             PlayerSettings.SetPreloadedAssets(list.ToArray());
         }
     }

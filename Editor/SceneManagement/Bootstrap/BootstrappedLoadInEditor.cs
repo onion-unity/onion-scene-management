@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Onion.SceneManagement.Setting;
 using Onion.SceneManagement.Utility;
 using UnityEditor;
@@ -7,6 +8,8 @@ using UnityEngine;
 namespace Onion.SceneManagement.Editor {
     [InitializeOnLoad]
     internal static class BootstrappedLoad {
+        private const string OpenScenesKey = "Onion.SceneManagement.Bootstrap.OpenScenes";
+
         static BootstrappedLoad() {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
@@ -29,13 +32,19 @@ namespace Onion.SceneManagement.Editor {
             await AwaitableEx.WaitWhile(() => !Bootstrapper.isReady, 
                 cancellationToken: Application.exitCancellationToken);
 
-            var group = SceneManagementSettings.bootstrapGroup;
-            if (group != null) {
-                await group.LoadAsync();
+            string openScenes = SessionState.GetString(OpenScenesKey, string.Empty);
+            SessionState.EraseString(OpenScenesKey);
 
-                group.scenes.Clear();
-                AssetDatabase.SaveAssets();
+            if (string.IsNullOrEmpty(openScenes)) {
+                return;
             }
+
+            var references = new List<SceneReference>();
+            foreach (var path in openScenes.Split('\n')) {
+                references.Add(SceneReference.FromPath(path));
+            }
+
+            await references.LoadAsync();
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state) {
@@ -51,8 +60,7 @@ namespace Onion.SceneManagement.Editor {
 
             switch (state) {
                 case PlayModeStateChange.ExitingEditMode:
-                    var group = SceneManagementSettings.bootstrapGroup;
-                    group.scenes.Clear();
+                    var paths = new List<string>();
 
                     int sceneCount = EditorSceneManager.sceneCount;
                     for (int i = 0; i < sceneCount; i++) {
@@ -61,10 +69,11 @@ namespace Onion.SceneManagement.Editor {
                             continue;
                         }
 
-                        group.scenes.Add(SceneReference.FromPath(scene.path));
+                        paths.Add(scene.path);
                     }
-                    
-                    AssetDatabase.SaveAssets();
+
+                    // Survives the domain reload into Play Mode, and isn't saved into any asset.
+                    SessionState.SetString(OpenScenesKey, string.Join('\n', paths));
                     EditorSceneManager.playModeStartScene = bootstrapScene.asset;
 
                     break;

@@ -7,26 +7,21 @@ using UnityEditor;
 #endif
 
 namespace Onion.SceneManagement.Setting {
+    /// <summary>
+    /// Included in builds through Preloaded Assets, only while a build runs;
+    /// in the Editor it is looked up through EditorBuildSettings.
+    /// </summary>
     internal sealed class SceneManagementSettingsAsset : ScriptableObject {
+        internal const string ConfigKey = "com.onion.scenemanagement";
+
         private static SceneManagementSettingsAsset _instance;
         internal static SceneManagementSettingsAsset instance {
-            get => _instance;
-            set {
-                if (_instance == value) {
-                    return;
-                }
-
-                if (_instance != null) {
-                    _instance.hideFlags = HideFlags.None;
-                }
-
-                _instance = value;
-                if (_instance == null) {
-                    return;
-                }
-                
-                _instance.hideFlags = HideFlags.DontUnloadUnusedAsset;
-                SceneManagementSettings.LoadFromAsset_Internal(value);
+            get {
+#if UNITY_EDITOR
+                // Not cached, so assigning another asset as the main settings takes effect immediately.
+                EditorBuildSettings.TryGetConfigObject(ConfigKey, out _instance);
+#endif
+                return _instance;
             }
         }
 
@@ -41,56 +36,19 @@ namespace Onion.SceneManagement.Setting {
         [SerializeField]
         internal SceneReference[] initialScenes;
 
-#if UNITY_EDITOR
-        private BootstrapGroup _bootstrapGroup;
-        internal BootstrapGroup bootstrapGroup {
-            get {
-                if (_bootstrapGroup == null) {
-                    var asset = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(this));
-                    foreach (var obj in asset) {
-                        if (obj is BootstrapGroup group) {
-                            _bootstrapGroup = group;
-                            break;
-                        }
-                    }
-
-                    if (_bootstrapGroup == null) {
-                        _bootstrapGroup = CreateInstance<BootstrapGroup>();
-                        _bootstrapGroup.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.DontSave;
-                        
-                        AssetDatabase.AddObjectToAsset(_bootstrapGroup, this);
-                        AssetDatabase.SaveAssets();
-                    }
-                }
-
-                return _bootstrapGroup;
-            }
-        }
-#endif
-        
+#if !UNITY_EDITOR
         private void OnEnable() {
-#if UNITY_EDITOR
-            bool foundInPreloadedAssets = false;
-            foreach (var obj in PlayerSettings.GetPreloadedAssets()) {
-                if (obj is SceneManagementSettingsAsset asset && asset == this) {
-                    foundInPreloadedAssets = true;
-                    break;
-                }
-            }
-
-            if (!foundInPreloadedAssets) {
-                return;
-            }
-#endif
-            instance = this;
+            _instance = this;
+            SceneManagementSettings.Reload_Internal();
         }
+#endif
 
         private void OnValidate() {
             if (instance != this) {
                 return;
             }
-            
-            SceneManagementSettings.LoadFromAsset_Internal(this);
+
+            SceneManagementSettings.Reload_Internal();
         }
     }
 }

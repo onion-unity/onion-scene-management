@@ -10,18 +10,27 @@ namespace Onion.SceneManagement.Setting {
         public static bool canUseBootstrapScene =>
             useBootstrap && bootstrapScene.type != SceneReferenceType.None;
 
-#if UNITY_EDITOR
-        internal static BootstrapGroup bootstrapGroup;
-#endif
+        // Values changed at runtime would otherwise carry over into the next Play session when domain reload is off.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Initialize() {
+            Reload_Internal();
+        }
 
-        internal static void LoadFromAsset_Internal(SceneManagementSettingsAsset asset) {
+        internal static void Reload_Internal() {
+            var asset = SceneManagementSettingsAsset.instance;
+            if (asset == null) {
+                useBootstrap = false;
+                bootstrapScene = default;
+                initialScenes = default;
+                overlapLoading = false;
+
+                return;
+            }
+
             useBootstrap = asset.useBootstrap;
             bootstrapScene = asset.bootstrapScene;
             initialScenes = asset.initialScenes;
             overlapLoading = asset.overlappedLoad;
-#if UNITY_EDITOR
-            bootstrapGroup = asset.bootstrapGroup;
-#endif
         }
     }
 }
