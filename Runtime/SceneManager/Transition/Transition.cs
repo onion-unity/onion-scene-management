@@ -45,10 +45,8 @@ namespace Onion.SceneManagement.Transition {
                 .Mode(mode);
         }
 
-        internal Transition Add(TransitionAction action) => Add(action, false);
-
-        internal Transition Add(TransitionAction action, bool parallel) {
-            action.parallel = parallel;
+        // Keeps action.parallel as the caller set it (e.g. Callback(..., parallel: true)).
+        internal Transition Add(TransitionAction action) {
             _actions.Add(action);
 
             return this;
