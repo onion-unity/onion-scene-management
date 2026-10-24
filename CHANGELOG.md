@@ -4,9 +4,13 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `Execute` / `ExecuteAsync` take `queued` (default `true`). With `queued: false`, a transition starts right away, alongside the running ones, instead of waiting for them.
+
 ### Changed
 
-- Transitions run one at a time, in the order they were started. A transition started while another one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition runs right away instead, so a handler can await a transition of its own without a deadlock.
+- Transitions run one at a time, in the order they were started, unless they are executed with `queued: false`. A transition started while another one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition runs right away instead, so a handler can await a transition of its own without a deadlock.
 - An exception in a scene handler is logged and no longer stops the other handlers or the transition.
 - With `CleanUp`, every loaded instance of a destination stays loaded, not only the first; `Refresh` reloads all of them.
 

@@ -72,6 +72,8 @@ await SceneManager.UnloadSceneAsync(_hud);                           // unload _
 
 `UnloadScene(s)Async` unloads exactly the given scenes, pinned ones included. The Bootstrap scene is never unloaded.
 
+Loads and unloads run one after another, in the order they were called; see [Running order](#running-order).
+
 By default the old scenes are unloaded before the new ones load. Check **Overlapped Load** in the settings to load first, so the old scenes stay until the new ones are ready (both are in memory for a moment).
 
 ### Pinning
@@ -123,7 +125,27 @@ await Transition.Create(_level)
 
 - `Callback`, `Delay`, `DelayFrame`, `WaitWhile` and `WaitUntil` take `parallel: true` to run alongside the following steps; the next step without it waits for them.
 - A transition runs once. Create a new one each time.
-- Transitions run one at a time, in the order they were started. A transition started while another one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition runs right away, so those can await a transition of their own.
+
+### Running order
+
+**Transitions run one at a time, in the order they were started.** This includes every `SceneManager.LoadScene(s)` / `UnloadScene(s)` call, which are transitions too. A transition started while another one is running waits until it has finished, so two transitions never decide what to load or unload from the same scenes.
+
+Pass `queued: false` to start a transition right away instead, alongside the running ones. Only the waiting is skipped; its steps run as usual.
+
+```csharp
+// The level transition takes a while; the HUD shouldn't wait for it.
+_ = Transition.Create(_level).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
+
+await Awaitable.WaitForSecondsAsync(0.5f);
+await Transition.Create(_hud, new TransitionMode(LoadMode.None, UnloadMode.None))
+    .Load()
+    .NotifyEnter()
+    .ExecuteAsync(queued: false);
+```
+
+- Use it only for a transition that can't conflict with the running ones, typically one with `UnloadMode.None`. Two overlapping transitions with `CleanUp` can unload each other's scenes.
+- A queued transition waits for every running transition, including ones started with `queued: false`.
+- Exception: a transition started while the running one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition starts right away even when queued, so those can await a transition of their own without a deadlock.
 
 ## Scene Handlers
 
