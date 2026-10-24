@@ -427,7 +427,13 @@ namespace Onion.SceneManagement {
                     var handler = list[i];
                     if (IsHandlerDestroyed(handler)) continue;
 
-                    handler.OnSceneEnter();
+                    // One failing handler must not stop the others or leave the transition half done.
+                    try {
+                        handler.OnSceneEnter();
+                    }
+                    catch (Exception e) {
+                        Debug.LogException(e, handler as MonoBehaviour);
+                    }
                 }
             }
 
@@ -446,12 +452,15 @@ namespace Onion.SceneManagement {
                 var handler = list[i];
                 if (IsHandlerDestroyed(handler)) continue;
 
-                awaitables.Add(handler.OnSceneEnterAsync());
+                try {
+                    awaitables.Add(handler.OnSceneEnterAsync());
+                }
+                catch (Exception e) {
+                    Debug.LogException(e, handler as MonoBehaviour);
+                }
             }
 
-            foreach (var awaitable in awaitables) {
-                await awaitable;
-            }
+            await AwaitAllLogged(awaitables);
         }
 
         internal static Awaitable NotifyExit_Internal(UniScene scene, bool global = false) {
@@ -462,7 +471,12 @@ namespace Onion.SceneManagement {
                     var handler = list[i];
                     if (IsHandlerDestroyed(handler)) continue;
 
-                    handler.OnSceneExit();
+                    try {
+                        handler.OnSceneExit();
+                    }
+                    catch (Exception e) {
+                        Debug.LogException(e, handler as MonoBehaviour);
+                    }
                 }
             }
             
@@ -481,11 +495,32 @@ namespace Onion.SceneManagement {
                 var handler = list[i];
                 if (IsHandlerDestroyed(handler)) continue;
 
-                awaitables.Add(handler.OnSceneExitAsync());
+                try {
+                    awaitables.Add(handler.OnSceneExitAsync());
+                }
+                catch (Exception e) {
+                    Debug.LogException(e, handler as MonoBehaviour);
+                }
             }
 
+            await AwaitAllLogged(awaitables);
+        }
+
+        private static async Awaitable AwaitAllLogged(List<Awaitable> awaitables) {
             foreach (var awaitable in awaitables) {
-                await awaitable;
+                if (awaitable == null) {
+                    continue;
+                }
+
+                try {
+                    await awaitable;
+                }
+                catch (OperationCanceledException) {
+                    // Cancelled on purpose (e.g. exiting Play Mode); nothing to report.
+                }
+                catch (Exception e) {
+                    Debug.LogException(e);
+                }
             }
         }
 
