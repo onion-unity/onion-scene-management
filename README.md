@@ -123,6 +123,7 @@ await Transition.Create(_level)
 
 - `Callback`, `Delay`, `DelayFrame`, `WaitWhile` and `WaitUntil` take `parallel: true` to run alongside the following steps; the next step without it waits for them.
 - A transition runs once. Create a new one each time.
+- Transitions run one at a time, in the order they were started. A transition started while another one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition runs right away, so those can await a transition of their own.
 
 ## Scene Handlers
 
