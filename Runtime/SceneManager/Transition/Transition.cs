@@ -112,21 +112,28 @@ namespace Onion.SceneManagement.Transition {
             _unloadTargets.Clear();
         }
 
-        public void Execute() {
-            _ = ExecuteAsync();
+        public void Execute(bool queued = true) {
+            _ = ExecuteAsync(queued);
         }
 
-        public async Awaitable ExecuteAsync() {
+        /// <summary>
+        /// Runs the transition after the transitions started before it have finished.
+        /// With <paramref name="queued"/> false, it starts right away instead, alongside any running transition
+        /// (its steps still run as usual); use that only for a transition that can't conflict with them,
+        /// e.g. one that doesn't unload. A transition started from a handler or callback the running
+        /// transition awaits starts right away either way, so awaiting it doesn't deadlock.
+        /// </summary>
+        public async Awaitable ExecuteAsync(bool queued = true) {
             if (_isUsed) {
                 Debug.LogWarning("This transition has already been used. Creating a new transition for reuse.");
-                return;    
+                return;
             }
 
             _isUsed = true;
 
             // While a running transition awaits a handler or callback, that code may be awaiting this
             // transition, so waiting for the running one would deadlock: this one runs right away.
-            bool queued = _running == 0 || _awaitingUserCode == 0;
+            queued = queued && (_running == 0 || _awaitingUserCode == 0);
             if (queued) {
                 int ticket = _nextTicket++;
                 while (ticket != _nowServing || _running > 0) {
