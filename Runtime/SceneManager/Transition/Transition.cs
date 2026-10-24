@@ -35,8 +35,9 @@ namespace Onion.SceneManagement.Transition {
         private static int _nowServing;
 
         // A Play session that ended mid-transition would otherwise leave the queue blocked when domain reload is off.
+        // Internal so tests can also reset it between tests that run in one Play session.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() {
+        internal static void ResetStatics() {
             _running = 0;
             _awaitingUserCode = 0;
             _nextTicket = 0;
