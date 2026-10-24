@@ -77,6 +77,10 @@ namespace Onion.SceneManagement {
             
             _operation.allowSceneActivation = true;
             await AwaitableEx.WaitUntil(_operation, o => o.isDone);
+            await Awaitable.NextFrameAsync(); // wait for scene to be fully loaded, as in LoadAsync
+
+            // Subscribed since LoadAsync, which returned before activation.
+            UniSceneManager.sceneLoaded -= OnSceneLoaded;
             _operation = null;
         }
 

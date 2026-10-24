@@ -110,7 +110,7 @@ namespace Onion.SceneManagement.Transition {
                     if (action.batch) { // batch is normally not parellel.
                         var batchActions = ListPool<TransitionAction>.Get();
                         
-                        if      (action.type == TransitionActionType.Load)     CreateLoadBatch(batchActions);
+                        if      (action.type == TransitionActionType.Load)     CreateLoadBatch(batchActions, action.activateOnLoad);
                         else if (action.type == TransitionActionType.Activate) CreateActivateBatch(batchActions);
                         else if (action.type == TransitionActionType.Unload)   CreateUnloadBatch(batchActions);
                         else if (action.type == TransitionActionType.Enter)    CreateEnterBatch(batchActions);
@@ -211,15 +211,15 @@ namespace Onion.SceneManagement.Transition {
                 && scene == SceneManagementSettings.bootstrapScene.scene;
         }
 
-        private void CreateLoadBatch(in List<TransitionAction> actions) {
+        private void CreateLoadBatch(in List<TransitionAction> actions, bool activateOnLoad) {
             foreach (var reference in _toLoad) {
-                actions.Add(TransitionAction.Load(reference, parallel: true));
+                actions.Add(TransitionAction.Load(reference, activateOnLoad, parallel: true));
             }
         }
 
         private void CreateActivateBatch(in List<TransitionAction> actions) {
-            foreach (var reference in _toLoad) {
-                actions.Add(TransitionAction.Activate(reference, parallel: true));
+            foreach (var loader in _loaders) {
+                actions.Add(TransitionAction.Activate(loader, parallel: true));
             }
         }
 
@@ -303,7 +303,7 @@ namespace Onion.SceneManagement.Transition {
         private Awaitable Execute_Internal(TransitionAction action) {
             return action.type switch {
                 TransitionActionType.Load   => Load_Internal(action),
-                TransitionActionType.Activate => SceneManager.ActivateSceneAsync_Internal(action.reference.GetLoader()),
+                TransitionActionType.Activate => SceneManager.ActivateSceneAsync_Internal(action.loader),
                 TransitionActionType.Unload => SceneManager.UnloadSceneAsync_Internal(action.scene.GetLoader()),
 
                 TransitionActionType.Enter      => SceneManager.NotifyEnter_Internal(action.scene, global: false),
@@ -341,7 +341,7 @@ namespace Onion.SceneManagement.Transition {
             }
 
             _loaders.Add(loader);
-            return SceneManager.LoadSceneAsync_Internal(loader);
+            return SceneManager.LoadSceneAsync_Internal(loader, action.activateOnLoad);
         }
 
         private async Awaitable Delay_Internal(TransitionAction action) {

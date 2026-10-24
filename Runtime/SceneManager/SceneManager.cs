@@ -354,13 +354,31 @@ namespace Onion.SceneManagement {
 
         // --- internal API ---
 
-        internal static async Awaitable LoadSceneAsync_Internal(SceneLoader loader) {
+        internal static async Awaitable LoadSceneAsync_Internal(SceneLoader loader, bool activateOnLoad = true) {
             if (loader == null || loader.scene.isLoaded) {
                 return;
             }
 
-            await loader.LoadAsync();
-            if (!loader.scene.IsValid()) {
+            await loader.LoadAsync(activateOnLoad);
+
+            // A scene that isn't activated yet has no objects; Activate registers it.
+            if (activateOnLoad) {
+                RegisterLoadedScene(loader);
+            }
+        }
+
+        internal static async Awaitable ActivateSceneAsync_Internal(SceneLoader loader) {
+            if (loader == null) {
+                return;
+            }
+
+            await loader.ActivateAsync();
+            RegisterLoadedScene(loader);
+        }
+
+        private static void RegisterLoadedScene(SceneLoader loader) {
+            // Not loaded: the load failed. Already cached: it was activated on load.
+            if (!loader.scene.IsValid() || !loader.scene.isLoaded || _handlersCache.ContainsKey(loader.scene)) {
                 return;
             }
 
@@ -374,14 +392,6 @@ namespace Onion.SceneManagement {
             handlers.Initialize(loader.scene);
 
             _handlersCache[loader.scene] = handlers;
-        }
-
-        internal static async Awaitable ActivateSceneAsync_Internal(SceneLoader loader) {
-            if (loader == null) {
-                return;
-            }
-
-            await loader.ActivateAsync();
         }
 
         internal static async Awaitable UnloadSceneAsync_Internal(SceneLoader loader) {
