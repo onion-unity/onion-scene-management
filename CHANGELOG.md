@@ -13,6 +13,7 @@ All notable changes to this package are documented in this file.
 - Transitions run one at a time, in the order they were started, unless they are executed with `queued: false`. A transition started while another one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition runs right away instead, so a handler can await a transition of its own without a deadlock.
 - An exception in a scene handler is logged and no longer stops the other handlers or the transition.
 - With `CleanUp`, every loaded instance of a destination stays loaded, not only the first; `Refresh` reloads all of them.
+- The Runtime assembly no longer imports `UnityEditor` outside `#if UNITY_EDITOR` or references `Unity.Addressables.Editor`. This is cleanup, not a fix: the `using` alone didn't break player builds.
 
 ### Fixed
 
@@ -20,7 +21,6 @@ All notable changes to this package are documented in this file.
 - `Load(activateOnLoad: false)` activated the scenes anyway, and `Activate()` did nothing; a scene loaded this way is now registered (and gets `sceneLoaded` and its handlers) when it is activated.
 - With `LoadMode.Additive`, enter notifications went to the first instance of the scene instead of the one just loaded.
 - Addressable scenes were loaded by path instead of address, so a scene whose address had been changed failed to load.
-- `SceneReference.cs` imported `UnityEditor` outside `#if UNITY_EDITOR`, and the Runtime assembly referenced `Unity.Addressables.Editor`.
 - An unload that waited behind another transition could unload scenes that transition had loaded.
 
 ## [0.4.0] - 2026-10-23
