@@ -18,6 +18,10 @@ namespace Onion.SceneManagement.Transition {
         private readonly List<Scene> _toUnload = new(initialCapacity);
         private readonly Stack<TransitionAction> _actionStack = new(initialCapacity);
 
+        // The loaders Load created, so Activate and Enter reach the instance this transition loaded,
+        // not the first loaded instance of the same scene (LoadMode.Additive).
+        private readonly List<SceneLoader> _loaders = new(initialCapacity);
+
         private bool _isUsed = false;
         private TransitionMode _mode = TransitionMode.Default;
 
@@ -74,6 +78,7 @@ namespace Onion.SceneManagement.Transition {
             _destinations.Clear();
             _actions.Clear();
             _parallels.Clear();
+            _loaders.Clear();
         }
 
         public void Execute() {
@@ -160,11 +165,20 @@ namespace Onion.SceneManagement.Transition {
                     continue;
                 }
 
-                if (_mode.unloadMode == UnloadMode.CleanUp) {
-                    _toUnload.Remove(destination.scene);
+                // Every loaded instance counts, not only the first one (LoadMode.Additive loads several).
+                var path = destination.path;
+                bool isLoaded = false;
+                foreach (var scene in loadedScenes) {
+                    if (scene.path != path) {
+                        continue;
+                    }
+
+                    isLoaded = true;
+                    if (_mode.unloadMode == UnloadMode.CleanUp) {
+                        _toUnload.Remove(scene);
+                    }
                 }
 
-                bool isLoaded = destination.scene.isLoaded;
                 switch (_mode.loadMode) {
                     case LoadMode.None:
                         if (!isLoaded) {
@@ -177,8 +191,10 @@ namespace Onion.SceneManagement.Transition {
 
                         break;
                     case LoadMode.Refresh:
-                        if (isLoaded) {
-                            _toUnload.Add(destination.scene);
+                        foreach (var scene in loadedScenes) {
+                            if (scene.path == path) {
+                                _toUnload.Add(scene);
+                            }
                         }
                         _toLoad.Add(destination);
 
@@ -219,13 +235,13 @@ namespace Onion.SceneManagement.Transition {
                 actions.Add(TransitionAction.GlobalEnter(scene, parallel: true));
             }
 
-            foreach (var reference in _toLoad) {
-                if (!reference.scene.isLoaded) {
-                    Debug.LogWarning($"Scene {reference.scene.name} is not loaded. Skipping enter action for this scene.");
+            foreach (var loader in _loaders) {
+                if (!loader.scene.isLoaded) {
+                    Debug.LogWarning($"Scene {loader.scene.name} is not loaded. Skipping enter action for this scene.");
                     continue;
                 }
 
-                actions.Add(TransitionAction.Enter(reference.GetLoader().scene, parallel: true));
+                actions.Add(TransitionAction.Enter(loader.scene, parallel: true));
             }
 
             actions.Add(TransitionAction.WaitForParallels());
@@ -235,12 +251,12 @@ namespace Onion.SceneManagement.Transition {
                 actions.Add(TransitionAction.GlobalEnterAsync(scene, parallel: true));
             }
 
-            foreach (var reference in _toLoad) {
-                if (!reference.scene.isLoaded) {
+            foreach (var loader in _loaders) {
+                if (!loader.scene.isLoaded) {
                     continue;
                 }
 
-                actions.Add(TransitionAction.EnterAsync(reference.GetLoader().scene, parallel: true));
+                actions.Add(TransitionAction.EnterAsync(loader.scene, parallel: true));
             }
         }
 
@@ -286,7 +302,7 @@ namespace Onion.SceneManagement.Transition {
 
         private Awaitable Execute_Internal(TransitionAction action) {
             return action.type switch {
-                TransitionActionType.Load   => SceneManager.LoadSceneAsync_Internal(action.reference.CreateLoader()),
+                TransitionActionType.Load   => Load_Internal(action),
                 TransitionActionType.Activate => SceneManager.ActivateSceneAsync_Internal(action.reference.GetLoader()),
                 TransitionActionType.Unload => SceneManager.UnloadSceneAsync_Internal(action.scene.GetLoader()),
 
@@ -316,6 +332,16 @@ namespace Onion.SceneManagement.Transition {
                 TransitionActionType.WaitForParallels => WaitForParallels(),
                 _ => null
             };
+        }
+
+        private Awaitable Load_Internal(TransitionAction action) {
+            var loader = action.reference.CreateLoader();
+            if (loader == null) {
+                return null;
+            }
+
+            _loaders.Add(loader);
+            return SceneManager.LoadSceneAsync_Internal(loader);
         }
 
         private async Awaitable Delay_Internal(TransitionAction action) {
