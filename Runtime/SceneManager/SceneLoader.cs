@@ -114,7 +114,8 @@ namespace Onion.SceneManagement {
 
         public override async Awaitable LoadAsync(bool activateOnLoad = true) {
 #if ONION_ADDRESSABLES
-            _handle = Addressables.LoadSceneAsync(reference.path, 
+            // The address is the key; the path is one only while the address hasn't been renamed.
+            _handle = Addressables.LoadSceneAsync(reference.address,
                 UniSceneManagement.LoadSceneMode.Additive, 
                 activateOnLoad);
             
