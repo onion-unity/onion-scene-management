@@ -231,7 +231,6 @@ namespace Onion.SceneManagement {
             }
         }
 
-        // Unloading is a transition to the scenes that stay loaded, so CleanUp unloads exactly the targets.
         // async so no targets still returns an Awaitable that can be awaited, not null.
         // Everything before the await runs synchronously, so callers may release the pooled targets once it returns.
         private static async Awaitable UnloadTargetsAsync(HashSet<UniScene> targets) {
@@ -239,22 +238,13 @@ namespace Onion.SceneManagement {
                 return;
             }
 
-            Transition.Transition transition;
-            using (ListPool<SceneReference>.Get(out var remaining)) {
-                foreach (var scene in targets) {
-                    // Pinning only protects scenes from CleanUp; naming a scene here unloads it anyway.
-                    Unpin(scene);
-                }
-
-                foreach (var scene in _loadedScenes) {
-                    if (!targets.Contains(scene)) {
-                        remaining.Add(SceneReference.FromScene(scene));
-                    }
-                }
-
-                // Create copies the destinations, so the pooled list can be released right after.
-                transition = Transition.Transition.Create(remaining, TransitionMode.Default);
+            foreach (var scene in targets) {
+                // Pinning only protects scenes from CleanUp; naming a scene here unloads it anyway.
+                Unpin(scene);
             }
+
+            // CreateUnload copies the targets, so the pooled set can be released right after.
+            var transition = Transition.Transition.CreateUnload(targets);
 
             await transition
                 .NotifyExit()
@@ -447,20 +437,27 @@ namespace Onion.SceneManagement {
 
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
-            var list = global ? handlers.asyncEnter.always : handlers.asyncEnter.normal;
-            for (int i = 0; i < list.Count; i++) {
-                var handler = list[i];
-                if (IsHandlerDestroyed(handler)) continue;
+            // A handler may await a transition of its own, which must not queue behind this one.
+            Transition.Transition.BeginUserCode();
+            try {
+                var list = global ? handlers.asyncEnter.always : handlers.asyncEnter.normal;
+                for (int i = 0; i < list.Count; i++) {
+                    var handler = list[i];
+                    if (IsHandlerDestroyed(handler)) continue;
 
-                try {
-                    awaitables.Add(handler.OnSceneEnterAsync());
+                    try {
+                        awaitables.Add(handler.OnSceneEnterAsync());
+                    }
+                    catch (Exception e) {
+                        Debug.LogException(e, handler as MonoBehaviour);
+                    }
                 }
-                catch (Exception e) {
-                    Debug.LogException(e, handler as MonoBehaviour);
-                }
+
+                await AwaitAllLogged(awaitables);
             }
-
-            await AwaitAllLogged(awaitables);
+            finally {
+                Transition.Transition.EndUserCode();
+            }
         }
 
         internal static Awaitable NotifyExit_Internal(UniScene scene, bool global = false) {
@@ -490,20 +487,26 @@ namespace Onion.SceneManagement {
 
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
-            var list = global ? handlers.asyncExit.always : handlers.asyncExit.normal;
-            for (int i = 0; i < list.Count; i++) {
-                var handler = list[i];
-                if (IsHandlerDestroyed(handler)) continue;
+            Transition.Transition.BeginUserCode();
+            try {
+                var list = global ? handlers.asyncExit.always : handlers.asyncExit.normal;
+                for (int i = 0; i < list.Count; i++) {
+                    var handler = list[i];
+                    if (IsHandlerDestroyed(handler)) continue;
 
-                try {
-                    awaitables.Add(handler.OnSceneExitAsync());
+                    try {
+                        awaitables.Add(handler.OnSceneExitAsync());
+                    }
+                    catch (Exception e) {
+                        Debug.LogException(e, handler as MonoBehaviour);
+                    }
                 }
-                catch (Exception e) {
-                    Debug.LogException(e, handler as MonoBehaviour);
-                }
+
+                await AwaitAllLogged(awaitables);
             }
-
-            await AwaitAllLogged(awaitables);
+            finally {
+                Transition.Transition.EndUserCode();
+            }
         }
 
         private static async Awaitable AwaitAllLogged(List<Awaitable> awaitables) {

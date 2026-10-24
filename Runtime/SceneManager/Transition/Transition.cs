@@ -22,8 +22,30 @@ namespace Onion.SceneManagement.Transition {
         // not the first loaded instance of the same scene (LoadMode.Additive).
         private readonly List<SceneLoader> _loaders = new(initialCapacity);
 
+        // Set only by CreateUnload; most transitions leave it empty (no array allocated).
+        private readonly List<Scene> _unloadTargets = new();
+
         private bool _isUsed = false;
         private TransitionMode _mode = TransitionMode.Default;
+
+        // Transitions run one at a time, in the order they were started (see ExecuteAsync).
+        private static int _running;
+        private static int _awaitingUserCode;
+        private static int _nextTicket;
+        private static int _nowServing;
+
+        // A Play session that ended mid-transition would otherwise leave the queue blocked when domain reload is off.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() {
+            _running = 0;
+            _awaitingUserCode = 0;
+            _nextTicket = 0;
+            _nowServing = 0;
+        }
+
+        // Marks async user code (handlers, callbacks, conditions) a running transition is awaiting.
+        internal static void BeginUserCode() => _awaitingUserCode++;
+        internal static void EndUserCode() => _awaitingUserCode--;
 
         internal Transition() { }
 
@@ -50,6 +72,14 @@ namespace Onion.SceneManagement.Transition {
         }
 
         // Keeps action.parallel as the caller set it (e.g. Callback(..., parallel: true)).
+        // Unloads exactly the targets that are still loaded when it runs, and loads nothing.
+        internal static Transition CreateUnload(IEnumerable<Scene> targets) {
+            var transition = new Transition();
+            transition._unloadTargets.AddRange(targets);
+
+            return transition;
+        }
+
         internal Transition Add(TransitionAction action) {
             _actions.Add(action);
 
@@ -79,6 +109,7 @@ namespace Onion.SceneManagement.Transition {
             _actions.Clear();
             _parallels.Clear();
             _loaders.Clear();
+            _unloadTargets.Clear();
         }
 
         public void Execute() {
@@ -93,6 +124,17 @@ namespace Onion.SceneManagement.Transition {
 
             _isUsed = true;
 
+            // While a running transition awaits a handler or callback, that code may be awaiting this
+            // transition, so waiting for the running one would deadlock: this one runs right away.
+            bool queued = _running == 0 || _awaitingUserCode == 0;
+            if (queued) {
+                int ticket = _nextTicket++;
+                while (ticket != _nowServing || _running > 0) {
+                    await Awaitable.NextFrameAsync(Application.exitCancellationToken);
+                }
+            }
+
+            _running++;
             try {
                 Prepare();
                 
@@ -141,6 +183,11 @@ namespace Onion.SceneManagement.Transition {
                 await WaitForParallels();
             }
             finally {
+                _running--;
+                if (queued) {
+                    _nowServing++;
+                }
+
                 // Not pooled: a caller may still hold this instance, and a pooled one could later
                 // pass the _isUsed check while running another caller's transition.
                 Clear();
@@ -154,7 +201,16 @@ namespace Onion.SceneManagement.Transition {
             // No destinations is a valid target state: with CleanUp, everything that isn't pinned is unloaded.
             var loadedScenes = SceneManager.loadedScenes;
 
-            if (_mode.unloadMode == UnloadMode.CleanUp) {
+            if (_unloadTargets.Count > 0) {
+                // Resolved here, not when the unload was requested: a transition queued ahead of
+                // this one may have loaded or unloaded scenes since.
+                foreach (var scene in _unloadTargets) {
+                    if (scene.isLoaded) {
+                        _toUnload.Add(scene);
+                    }
+                }
+            }
+            else if (_mode.unloadMode == UnloadMode.CleanUp) {
                 _toUnload.AddRange(loadedScenes);
             }
             
@@ -374,21 +430,37 @@ namespace Onion.SceneManagement.Transition {
             return null;
         }
 
-        private Awaitable CallbackAsync_Internal(TransitionAction action) {
+        private async Awaitable CallbackAsync_Internal(TransitionAction action) {
             if (action.asyncCallback == null) {
-                return null;
+                return;
             }
 
-            return action.asyncCallback.Invoke();
+            BeginUserCode();
+            try {
+                var awaitable = action.asyncCallback.Invoke();
+                if (awaitable != null) {
+                    await awaitable;
+                }
+            }
+            finally {
+                EndUserCode();
+            }
         }
 
+        // Conditions count as user code: one may wait for a transition started from a callback.
         private async Awaitable WaitWhile_Internal(TransitionAction action) {
             if (action.condition == null) {
                 return;
             }
 
-            while (action.condition()) {
-                await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
+            BeginUserCode();
+            try {
+                while (action.condition()) {
+                    await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
+                }
+            }
+            finally {
+                EndUserCode();
             }
         }
 
@@ -397,8 +469,14 @@ namespace Onion.SceneManagement.Transition {
                 return;
             }
 
-            while (!action.condition()) {
-                await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
+            BeginUserCode();
+            try {
+                while (!action.condition()) {
+                    await Awaitable.NextFrameAsync(cancellationToken: action.cancellationToken);
+                }
+            }
+            finally {
+                EndUserCode();
             }
         }
     }
