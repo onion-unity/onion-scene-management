@@ -2,7 +2,12 @@
 
 All notable changes to this package are documented in this file.
 
-## [Unreleased]
+## [0.5.0] - 2026-10-24
+
+### Breaking changes
+
+- Transitions run one at a time, in the order they were started, unless they are executed with `queued: false`. This includes `SceneManager.LoadScene(s)` / `UnloadScene(s)`. A transition started while another one was running used to run alongside it; it now waits until that one has finished. Pass `queued: false` where the old behavior is needed. A transition started while another one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition runs right away, so a handler can await a transition of its own without a deadlock.
+- With `CleanUp`, every loaded instance of a destination stays loaded, not only the first; `Refresh` reloads all of them.
 
 ### Added
 
@@ -10,9 +15,7 @@ All notable changes to this package are documented in this file.
 
 ### Changed
 
-- Transitions run one at a time, in the order they were started, unless they are executed with `queued: false`. A transition started while another one awaits an async handler, an async `Callback` or a `WaitWhile` / `WaitUntil` condition runs right away instead, so a handler can await a transition of its own without a deadlock.
 - An exception in a scene handler is logged and no longer stops the other handlers or the transition.
-- With `CleanUp`, every loaded instance of a destination stays loaded, not only the first; `Refresh` reloads all of them.
 - The Runtime assembly no longer imports `UnityEditor` outside `#if UNITY_EDITOR` or references `Unity.Addressables.Editor`. This is cleanup, not a fix: the `using` alone didn't break player builds.
 
 ### Fixed
@@ -22,6 +25,10 @@ All notable changes to this package are documented in this file.
 - With `LoadMode.Additive`, enter notifications went to the first instance of the scene instead of the one just loaded.
 - Addressable scenes were loaded by path instead of address, so a scene whose address had been changed failed to load.
 - An unload that waited behind another transition could unload scenes that transition had loaded.
+
+### Known issues
+
+- Loading several scenes with `Load(activateOnLoad: false)` at once can stall: while one scene waits for activation, Unity holds the other scene loads back. Load one scene at a time this way, or activate on load.
 
 ## [0.4.0] - 2026-10-23
 
