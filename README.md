@@ -34,6 +34,8 @@ using Onion.SceneManagement;
 await SceneManager.LoadSceneAsync(_title);
 ```
 
+Every public type is in the `Onion.SceneManagement` namespace, so this one `using` covers the whole package.
+
 ## SceneReference
 
 A `SceneReference` field shows as a scene asset field in the inspector and is stored as the scene's GUID.
@@ -90,7 +92,7 @@ SceneManager.Unpin(_hud);
 `SceneManager.LoadSceneAsync` is a shortcut for this flow:
 
 ```csharp
-using Onion.SceneManagement.Transition;
+using Onion.SceneManagement;
 
 await Transition.Create(_level)
     .NotifyExit()
@@ -157,7 +159,7 @@ await Transition.Create(_hud, new TransitionMode(LoadMode.None, UnloadMode.None)
 | `ISceneExitHandler` / `IAsyncSceneExitHandler` | By `NotifyExit`, before the scene is unloaded. |
 
 ```csharp
-using Onion.SceneManagement.Handler;
+using Onion.SceneManagement;
 
 public class TitleScreen : MonoBehaviour, ISceneEnterHandler, IAsyncSceneExitHandler {
     public void OnSceneEnter() { }
@@ -169,7 +171,7 @@ public class TitleScreen : MonoBehaviour, ISceneEnterHandler, IAsyncSceneExitHan
 ```
 
 - Async handlers are awaited before the transition goes on. Async exit handlers run before the others; enter handlers run before the async ones.
-- Mark the handler method with `[ExecuteByAnyScene]` (`Onion.SceneManagement.Handler.Attributes`) to call it on every transition, not only when its own scene enters or exits.
+- Mark the handler method with `[ExecuteByAnyScene]` to call it on every transition, not only when its own scene enters or exits.
 - `SceneManager.sceneLoaded` / `sceneUnloaded` are raised for every scene loaded or unloaded through the package.
 
 ## Bootstrap

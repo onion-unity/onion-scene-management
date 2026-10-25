@@ -2,6 +2,29 @@
 
 All notable changes to this package are documented in this file.
 
+## [0.6.0] - 2026-10-25
+
+### Breaking changes
+
+- Every type is now in the `Onion.SceneManagement` namespace. The `Onion.SceneManagement.Transition`, `.Handler`, `.Handler.Attributes`, `.Setting` and `.Utility` namespaces are gone, so `Transition`, the handler interfaces, `[ExecuteByAnyScene]` and `SceneManagementSettings` all come with `using Onion.SceneManagement;`.
+
+### Changed
+
+- `TransitionAction` is no longer public. It had no members that could be used outside the package.
+
+### Migration
+
+Delete these `using` directives wherever they appear; `using Onion.SceneManagement;` covers what they imported:
+
+```csharp
+using Onion.SceneManagement.Transition;
+using Onion.SceneManagement.Handler;
+using Onion.SceneManagement.Handler.Attributes;
+using Onion.SceneManagement.Setting;
+```
+
+Code that wrote a type with its old namespace, such as `Onion.SceneManagement.Transition.Transition`, now writes `Onion.SceneManagement.Transition`.
+
 ## [0.5.0] - 2026-10-24
 
 ### Breaking changes

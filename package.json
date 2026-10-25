@@ -1,6 +1,6 @@
 {
   "name": "com.onion.scenemanagement",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "displayName": "Onion Scene Management",
   "description": "Async scene loading and unloading, GUID-based scene references that survive renames and moves, fluent transition flows with enter/exit handlers, and Bootstrap scene support.",
   "keywords": [
