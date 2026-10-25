@@ -159,7 +159,7 @@ namespace Onion.SceneManagement {
                     if (action.batch) { // batch is normally not parellel.
                         var batchActions = ListPool<TransitionAction>.Get();
                         
-                        if      (action.type == TransitionActionType.Load)     CreateLoadBatch(batchActions, action.activateOnLoad);
+                        if      (action.type == TransitionActionType.Load)     CreateLoadBatch(batchActions, action.activateOnLoad, action.args);
                         else if (action.type == TransitionActionType.Activate) CreateActivateBatch(batchActions);
                         else if (action.type == TransitionActionType.Unload)   CreateUnloadBatch(batchActions);
                         else if (action.type == TransitionActionType.Enter)    CreateEnterBatch(batchActions);
@@ -274,9 +274,14 @@ namespace Onion.SceneManagement {
                 && scene == SceneManagementSettings.bootstrapScene.scene;
         }
 
-        private void CreateLoadBatch(in List<TransitionAction> actions, bool activateOnLoad) {
+        private void CreateLoadBatch(in List<TransitionAction> actions, bool activateOnLoad, SceneArgs args) {
+            // LoadMode.None skips a destination that is already loaded, so its args would be lost without a word.
+            if (args != null && _mode.loadMode == LoadMode.None && _toLoad.Count < _destinations.Count) {
+                Debug.LogWarning($"{args.GetType().Name} is delivered only to scenes this transition loads; already loaded destinations don't receive it. Use LoadMode.Refresh to reload them with it.");
+            }
+
             foreach (var reference in _toLoad) {
-                actions.Add(TransitionAction.Load(reference, activateOnLoad, parallel: true));
+                actions.Add(TransitionAction.Load(reference, activateOnLoad, args, parallel: true));
             }
         }
 
@@ -304,7 +309,7 @@ namespace Onion.SceneManagement {
                     continue;
                 }
 
-                actions.Add(TransitionAction.Enter(loader.scene, parallel: true));
+                actions.Add(TransitionAction.Enter(loader.scene, loader.args, parallel: true));
             }
 
             actions.Add(TransitionAction.WaitForParallels());
@@ -319,7 +324,7 @@ namespace Onion.SceneManagement {
                     continue;
                 }
 
-                actions.Add(TransitionAction.EnterAsync(loader.scene, parallel: true));
+                actions.Add(TransitionAction.EnterAsync(loader.scene, loader.args, parallel: true));
             }
         }
 
@@ -369,9 +374,9 @@ namespace Onion.SceneManagement {
                 TransitionActionType.Activate => SceneManager.ActivateSceneAsync_Internal(action.loader),
                 TransitionActionType.Unload => SceneManager.UnloadSceneAsync_Internal(action.scene.GetLoader()),
 
-                TransitionActionType.Enter      => SceneManager.NotifyEnter_Internal(action.scene, global: false),
+                TransitionActionType.Enter      => SceneManager.NotifyEnter_Internal(action.scene, global: false, action.args),
                 TransitionActionType.Exit       => SceneManager.NotifyExit_Internal(action.scene, global: false),
-                TransitionActionType.EnterAsync => SceneManager.NotifyAsyncEnter_Internal(action.scene, global: false),
+                TransitionActionType.EnterAsync => SceneManager.NotifyAsyncEnter_Internal(action.scene, global: false, action.args),
                 TransitionActionType.ExitAsync  => SceneManager.NotifyAsyncExit_Internal(action.scene, global: false),
 
                 TransitionActionType.GlobalEnter      => SceneManager.NotifyEnter_Internal(action.scene, global: true),
@@ -403,6 +408,7 @@ namespace Onion.SceneManagement {
                 return null;
             }
 
+            loader.args = action.args;
             _loaders.Add(loader);
             return SceneManager.LoadSceneAsync_Internal(loader, action.activateOnLoad);
         }

@@ -122,9 +122,7 @@ namespace Onion.SceneManagement {
         }
 
         public static Awaitable LoadSceneAsync(SceneReference reference, TransitionMode mode = default) {
-            return SceneManagementSettings.overlapLoading
-                ? Transition.Create(reference, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
-                : Transition.Create(reference, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
+            return LoadSceneAsync(reference, args: null, mode);
         }
 
         public static Awaitable LoadSceneAsync(int buildIndex, TransitionMode mode = default) {
@@ -135,15 +133,51 @@ namespace Onion.SceneManagement {
             return LoadSceneAsync(SceneReference.FromName(name), mode);
         }
 
+        public static Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
+            return LoadScenesAsync(references, args: null, mode);
+        }
+
+        // --- With args: every scene this call loads receives them on Enter (ISceneEnterHandler<T>) ---
+
+        public static void LoadScene(SceneReference reference, SceneArgs args, TransitionMode mode = default) {
+            _ = LoadSceneAsync(reference, args, mode);
+        }
+
+        public static void LoadScene(int buildIndex, SceneArgs args, TransitionMode mode = default) {
+            _ = LoadSceneAsync(buildIndex, args, mode);
+        }
+
+        public static void LoadScene(string name, SceneArgs args, TransitionMode mode = default) {
+            _ = LoadSceneAsync(name, args, mode);
+        }
+
+        public static void LoadScenes(IEnumerable<SceneReference> references, SceneArgs args, TransitionMode mode = default) {
+            _ = LoadScenesAsync(references, args, mode);
+        }
+
+        public static Awaitable LoadSceneAsync(SceneReference reference, SceneArgs args, TransitionMode mode = default) {
+            return SceneManagementSettings.overlapLoading
+                ? Transition.Create(reference, mode).NotifyExit().Load(args).Unload().NotifyEnter().ExecuteAsync()
+                : Transition.Create(reference, mode).NotifyExit().Unload().Load(args).NotifyEnter().ExecuteAsync();
+        }
+
+        public static Awaitable LoadSceneAsync(int buildIndex, SceneArgs args, TransitionMode mode = default) {
+            return LoadSceneAsync(SceneReference.FromBuildIndex(buildIndex), args, mode);
+        }
+
+        public static Awaitable LoadSceneAsync(string name, SceneArgs args, TransitionMode mode = default) {
+            return LoadSceneAsync(SceneReference.FromName(name), args, mode);
+        }
+
         // async so an empty list still returns an Awaitable that can be awaited, not null.
-        public static async Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, TransitionMode mode = default) {
+        public static async Awaitable LoadScenesAsync(IEnumerable<SceneReference> references, SceneArgs args, TransitionMode mode = default) {
             if (references.IsNullOrEmpty()) {
                 return;
             }
 
             await (SceneManagementSettings.overlapLoading
-                ? Transition.Create(references, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
-                : Transition.Create(references, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync());
+                ? Transition.Create(references, mode).NotifyExit().Load(args).Unload().NotifyEnter().ExecuteAsync()
+                : Transition.Create(references, mode).NotifyExit().Unload().Load(args).NotifyEnter().ExecuteAsync());
         }
 
         public static Awaitable LoadScenesAsync(IEnumerable<int> buildIndices, TransitionMode mode = default) {
@@ -403,65 +437,91 @@ namespace Onion.SceneManagement {
         }
 
         // Each returns null when the scene has no handlers; Transition skips a null step.
-        internal static Awaitable NotifyEnter_Internal(UniScene scene, bool global = false) {
+        // args are set only for scenes the transition loaded with Load(args), never for global notifications.
+        internal static Awaitable NotifyEnter_Internal(UniScene scene, bool global = false, SceneArgs args = null) {
             if (_handlersCache.TryGetValue(scene, out var handlers)) {
-                InvokeHandlers(global ? handlers.enter.always : handlers.enter.normal, handler => handler.OnSceneEnter());
+                var flag = global ? SceneHandlerFlags.GlobalEnter : SceneHandlerFlags.Enter;
+                InvokeHandlers<ISceneEnterHandler>(handlers, flag, handler => handler.OnSceneEnter());
+
+                if (args != null) {
+                    InvokeHandlers<ISceneHandler>(handlers, SceneHandlerFlags.ArgsEnter, handler => SceneArgsInvoker.InvokeEnter(handler, args));
+                }
             }
 
             return null;
         }
 
-        internal static Awaitable NotifyAsyncEnter_Internal(UniScene scene, bool global = false) {
-            return _handlersCache.TryGetValue(scene, out var handlers)
-                ? InvokeAsyncHandlers(global ? handlers.asyncEnter.always : handlers.asyncEnter.normal, handler => handler.OnSceneEnterAsync())
-                : null;
+        internal static Awaitable NotifyAsyncEnter_Internal(UniScene scene, bool global = false, SceneArgs args = null) {
+            if (!_handlersCache.TryGetValue(scene, out var handlers)) {
+                return null;
+            }
+
+            var flag = global ? SceneHandlerFlags.GlobalAsyncEnter : SceneHandlerFlags.AsyncEnter;
+            var awaitable = InvokeAsyncHandlers<IAsyncSceneEnterHandler>(handlers, flag, handler => handler.OnSceneEnterAsync());
+            return args != null
+                ? AwaitBoth(awaitable, InvokeAsyncHandlers<ISceneHandler>(handlers, SceneHandlerFlags.ArgsAsyncEnter, handler => SceneArgsInvoker.InvokeEnterAsync(handler, args)))
+                : awaitable;
+        }
+
+        // Both are already running; this only waits for them together.
+        private static async Awaitable AwaitBoth(Awaitable first, Awaitable second) {
+            await first;
+            await second;
         }
 
         internal static Awaitable NotifyExit_Internal(UniScene scene, bool global = false) {
             if (_handlersCache.TryGetValue(scene, out var handlers)) {
-                InvokeHandlers(global ? handlers.exit.always : handlers.exit.normal, handler => handler.OnSceneExit());
+                var flag = global ? SceneHandlerFlags.GlobalExit : SceneHandlerFlags.Exit;
+                InvokeHandlers<ISceneExitHandler>(handlers, flag, handler => handler.OnSceneExit());
             }
 
             return null;
         }
 
         internal static Awaitable NotifyAsyncExit_Internal(UniScene scene, bool global = false) {
-            return _handlersCache.TryGetValue(scene, out var handlers)
-                ? InvokeAsyncHandlers(global ? handlers.asyncExit.always : handlers.asyncExit.normal, handler => handler.OnSceneExitAsync())
-                : null;
+            if (!_handlersCache.TryGetValue(scene, out var handlers)) {
+                return null;
+            }
+
+            var flag = global ? SceneHandlerFlags.GlobalAsyncExit : SceneHandlerFlags.AsyncExit;
+            return InvokeAsyncHandlers<IAsyncSceneExitHandler>(handlers, flag, handler => handler.OnSceneExitAsync());
         }
 
         // The invoke delegates capture nothing, so the compiler caches them: no allocation per call.
-        private static void InvokeHandlers<T>(IReadOnlyList<T> handlers, Action<T> invoke) where T : class, ISceneHandler {
-            for (int i = 0; i < handlers.Count; i++) {
-                var handler = handlers[i];
-                if (IsHandlerDestroyed(handler)) continue;
+        // (Except the args ones, which capture the args: one allocation per notified scene.)
+        // Only entries with the flag are invoked; the flag guarantees the cast to T.
+        private static void InvokeHandlers<T>(SceneHandlerCollection handlers, SceneHandlerFlags flag, Action<T> invoke) where T : class, ISceneHandler {
+            var entries = handlers.entries;
+            for (int i = 0; i < entries.Count; i++) {
+                var entry = entries[i];
+                if ((entry.flags & flag) == 0 || IsHandlerDestroyed(entry.handler)) continue;
 
                 // One failing handler must not stop the others or leave the transition half done.
                 try {
-                    invoke(handler);
+                    invoke((T)entry.handler);
                 }
                 catch (Exception e) {
-                    Debug.LogException(e, handler as MonoBehaviour);
+                    Debug.LogException(e, entry.handler as MonoBehaviour);
                 }
             }
         }
 
-        private static async Awaitable InvokeAsyncHandlers<T>(IReadOnlyList<T> handlers, Func<T, Awaitable> invoke) where T : class, ISceneHandler {
+        private static async Awaitable InvokeAsyncHandlers<T>(SceneHandlerCollection handlers, SceneHandlerFlags flag, Func<T, Awaitable> invoke) where T : class, ISceneHandler {
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
             // A handler may await a transition of its own, which must not queue behind this one.
             Transition.BeginUserCode();
             try {
-                for (int i = 0; i < handlers.Count; i++) {
-                    var handler = handlers[i];
-                    if (IsHandlerDestroyed(handler)) continue;
+                var entries = handlers.entries;
+                for (int i = 0; i < entries.Count; i++) {
+                    var entry = entries[i];
+                    if ((entry.flags & flag) == 0 || IsHandlerDestroyed(entry.handler)) continue;
 
                     try {
-                        awaitables.Add(invoke(handler));
+                        awaitables.Add(invoke((T)entry.handler));
                     }
                     catch (Exception e) {
-                        Debug.LogException(e, handler as MonoBehaviour);
+                        Debug.LogException(e, entry.handler as MonoBehaviour);
                     }
                 }
 

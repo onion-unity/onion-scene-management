@@ -13,7 +13,8 @@ namespace Onion.SceneManagement {
         internal SceneReference reference;
         internal SceneLoader loader;
         internal bool activateOnLoad;
-        
+        internal SceneArgs args;
+
         internal float waitSeconds;
         internal int waitFrames;
         internal bool ignoreTimeScale;
@@ -27,11 +28,12 @@ namespace Onion.SceneManagement {
 
         internal bool parallel;
 
-        internal static TransitionAction Load(SceneReference reference, bool activateOnLoad, bool parallel) {
+        internal static TransitionAction Load(SceneReference reference, bool activateOnLoad, SceneArgs args, bool parallel) {
             return new TransitionAction {
                 type = TransitionActionType.Load,
                 reference = reference,
                 activateOnLoad = activateOnLoad,
+                args = args,
                 parallel = parallel
             };
         }
@@ -52,10 +54,11 @@ namespace Onion.SceneManagement {
              };
         }
 
-        internal static TransitionAction Enter(Scene scene, bool parallel) {
+        internal static TransitionAction Enter(Scene scene, SceneArgs args, bool parallel) {
             return new TransitionAction {
                 type = TransitionActionType.Enter,
                 scene = scene,
+                args = args,
                 parallel = parallel
              };
         }
@@ -68,10 +71,11 @@ namespace Onion.SceneManagement {
              };
         }
 
-        internal static TransitionAction EnterAsync(Scene scene, bool parallel) {
+        internal static TransitionAction EnterAsync(Scene scene, SceneArgs args, bool parallel) {
             return new TransitionAction {
                 type = TransitionActionType.EnterAsync,
                 scene = scene,
+                args = args,
                 parallel = parallel
              };
         }

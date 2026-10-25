@@ -9,7 +9,16 @@ namespace Onion.SceneManagement {
             => transition.Add(new TransitionAction() {
                 type = TransitionActionType.Load,
                 activateOnLoad = activateOnLoad,
-                batch = true, 
+                batch = true,
+            });
+
+        // Only the scenes this load brings in receive the args (see ISceneEnterHandler<T>).
+        public static Transition Load(this Transition transition, SceneArgs args, bool activateOnLoad = true)
+            => transition.Add(new TransitionAction() {
+                type = TransitionActionType.Load,
+                activateOnLoad = activateOnLoad,
+                args = args,
+                batch = true,
             });
 
         public static Transition Activate(this Transition transition)

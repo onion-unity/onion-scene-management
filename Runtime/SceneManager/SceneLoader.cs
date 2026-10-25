@@ -26,6 +26,10 @@ namespace Onion.SceneManagement {
         }
 
         public abstract float progress { get; }
+
+        // Set by the Load that created this loader; delivered on Enter.
+        public SceneArgs args { get; set; }
+
         protected SceneLoader(SceneReference reference) {
             this.reference = reference;
         }

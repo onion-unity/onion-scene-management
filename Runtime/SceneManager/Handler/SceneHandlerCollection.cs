@@ -1,42 +1,34 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 using UniSceneManagement = UnityEngine.SceneManagement;
 
 namespace Onion.SceneManagement {
-    internal sealed class HandlerGroup<T> where T : ISceneHandler {
-        private readonly List<T> _normal = new();
-        private readonly List<T> _always = new();
+    internal readonly struct SceneHandlerEntry {
+        public readonly ISceneHandler handler;
+        public readonly SceneHandlerFlags flags;
 
-        public IReadOnlyList<T> normal => _normal;
-        public IReadOnlyList<T> always => _always;
-
-        public void Add(T handler, bool executeAlways) {
-            if (executeAlways) {
-                _always.Add(handler);
-            } else {
-                _normal.Add(handler);
-            }
-        }
-
-        public void Clear() {
-            _normal.Clear();
-            _always.Clear();
+        public SceneHandlerEntry(ISceneHandler handler, SceneHandlerFlags flags) {
+            this.handler = handler;
+            this.flags = flags;
         }
     }
 
+    // One pooled list per scene; each handler is stored once with the notifications it receives.
     internal sealed class SceneHandlerCollection {
-        public HandlerGroup<ISceneEnterHandler> enter { get; } = new();
-        public HandlerGroup<ISceneExitHandler> exit { get; } = new();
-        public HandlerGroup<IAsyncSceneEnterHandler> asyncEnter { get; } = new();
-        public HandlerGroup<IAsyncSceneExitHandler> asyncExit { get; } = new();
+        private List<SceneHandlerEntry> _entries;
+
+        // Empty, not null, for an invalid scene or after Clear.
+        public IReadOnlyList<SceneHandlerEntry> entries => (IReadOnlyList<SceneHandlerEntry>)_entries ?? Array.Empty<SceneHandlerEntry>();
 
         public void Initialize(UniSceneManagement.Scene scene) {
             if (!scene.IsValid()) {
                 return;
             }
-            
+
             Clear(); // ensure no handlers are left from previous scenes
+            _entries = ListPool<SceneHandlerEntry>.Get();
 
             using var objectPool = ListPool<GameObject>.Get(out var objects);
             using var handlerPool = ListPool<ISceneHandler>.Get(out var handlers);
@@ -46,36 +38,21 @@ namespace Onion.SceneManagement {
                 obj.GetComponentsInChildren(includeInactive: true, handlers);
 
                 foreach (var handler in handlers) {
-                    AddHandler(handler);
+                    var flags = handler.GetFlags();
+                    if (flags != SceneHandlerFlags.None) {
+                        _entries.Add(new SceneHandlerEntry(handler, flags));
+                    }
                 }
 
                 handlers.Clear();
             }
         }
 
-        private void AddHandler(ISceneHandler handler) {
-            if (handler is ISceneEnterHandler e) {
-                enter.Add(e, e.IsExecuteAlways(SceneHandlerType.Enter));
-            }
-
-            if (handler is ISceneExitHandler x) {
-                exit.Add(x, x.IsExecuteAlways(SceneHandlerType.Exit));
-            }
-
-            if (handler is IAsyncSceneEnterHandler ae) {
-                asyncEnter.Add(ae, ae.IsExecuteAlways(SceneHandlerType.AsyncEnter));
-            }
-            
-            if (handler is IAsyncSceneExitHandler ax) {
-                asyncExit.Add(ax, ax.IsExecuteAlways(SceneHandlerType.AsyncExit));
-            }
-        }
-
         public void Clear() {
-            enter.Clear();
-            exit.Clear();
-            asyncEnter.Clear();
-            asyncExit.Clear();
+            if (_entries != null) {
+                ListPool<SceneHandlerEntry>.Release(_entries);
+                _entries = null;
+            }
         }
     }
 }
