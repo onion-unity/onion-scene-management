@@ -402,93 +402,63 @@ namespace Onion.SceneManagement {
             }
         }
 
+        // Each returns null when the scene has no handlers; Transition skips a null step.
         internal static Awaitable NotifyEnter_Internal(UniScene scene, bool global = false) {
             if (_handlersCache.TryGetValue(scene, out var handlers)) {
-                var list = global ? handlers.enter.always : handlers.enter.normal;
-
-                for (int i = 0; i < list.Count; i++) {
-                    var handler = list[i];
-                    if (IsHandlerDestroyed(handler)) continue;
-
-                    // One failing handler must not stop the others or leave the transition half done.
-                    try {
-                        handler.OnSceneEnter();
-                    }
-                    catch (Exception e) {
-                        Debug.LogException(e, handler as MonoBehaviour);
-                    }
-                }
+                InvokeHandlers(global ? handlers.enter.always : handlers.enter.normal, handler => handler.OnSceneEnter());
             }
 
             return null;
         }
 
-        internal static async Awaitable NotifyAsyncEnter_Internal(UniScene scene, bool global = false) {
-            if (!_handlersCache.TryGetValue(scene, out var handlers)) {
-                return;
+        internal static Awaitable NotifyAsyncEnter_Internal(UniScene scene, bool global = false) {
+            return _handlersCache.TryGetValue(scene, out var handlers)
+                ? InvokeAsyncHandlers(global ? handlers.asyncEnter.always : handlers.asyncEnter.normal, handler => handler.OnSceneEnterAsync())
+                : null;
+        }
+
+        internal static Awaitable NotifyExit_Internal(UniScene scene, bool global = false) {
+            if (_handlersCache.TryGetValue(scene, out var handlers)) {
+                InvokeHandlers(global ? handlers.exit.always : handlers.exit.normal, handler => handler.OnSceneExit());
             }
 
+            return null;
+        }
+
+        internal static Awaitable NotifyAsyncExit_Internal(UniScene scene, bool global = false) {
+            return _handlersCache.TryGetValue(scene, out var handlers)
+                ? InvokeAsyncHandlers(global ? handlers.asyncExit.always : handlers.asyncExit.normal, handler => handler.OnSceneExitAsync())
+                : null;
+        }
+
+        // The invoke delegates capture nothing, so the compiler caches them: no allocation per call.
+        private static void InvokeHandlers<T>(IReadOnlyList<T> handlers, Action<T> invoke) where T : class, ISceneHandler {
+            for (int i = 0; i < handlers.Count; i++) {
+                var handler = handlers[i];
+                if (IsHandlerDestroyed(handler)) continue;
+
+                // One failing handler must not stop the others or leave the transition half done.
+                try {
+                    invoke(handler);
+                }
+                catch (Exception e) {
+                    Debug.LogException(e, handler as MonoBehaviour);
+                }
+            }
+        }
+
+        private static async Awaitable InvokeAsyncHandlers<T>(IReadOnlyList<T> handlers, Func<T, Awaitable> invoke) where T : class, ISceneHandler {
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
             // A handler may await a transition of its own, which must not queue behind this one.
             Transition.BeginUserCode();
             try {
-                var list = global ? handlers.asyncEnter.always : handlers.asyncEnter.normal;
-                for (int i = 0; i < list.Count; i++) {
-                    var handler = list[i];
+                for (int i = 0; i < handlers.Count; i++) {
+                    var handler = handlers[i];
                     if (IsHandlerDestroyed(handler)) continue;
 
                     try {
-                        awaitables.Add(handler.OnSceneEnterAsync());
-                    }
-                    catch (Exception e) {
-                        Debug.LogException(e, handler as MonoBehaviour);
-                    }
-                }
-
-                await AwaitAllLogged(awaitables);
-            }
-            finally {
-                Transition.EndUserCode();
-            }
-        }
-
-        internal static Awaitable NotifyExit_Internal(UniScene scene, bool global = false) {
-            if (_handlersCache.TryGetValue(scene, out var handlers)) {
-                var list = global ? handlers.exit.always : handlers.exit.normal;
-                
-                for (int i = 0; i < list.Count; i++) {
-                    var handler = list[i];
-                    if (IsHandlerDestroyed(handler)) continue;
-
-                    try {
-                        handler.OnSceneExit();
-                    }
-                    catch (Exception e) {
-                        Debug.LogException(e, handler as MonoBehaviour);
-                    }
-                }
-            }
-            
-            return null;
-        }
-
-        internal static async Awaitable NotifyAsyncExit_Internal(UniScene scene, bool global = false) {
-            if (!_handlersCache.TryGetValue(scene, out var handlers)) {
-                return;
-            }
-
-            using var pool = ListPool<Awaitable>.Get(out var awaitables);
-
-            Transition.BeginUserCode();
-            try {
-                var list = global ? handlers.asyncExit.always : handlers.asyncExit.normal;
-                for (int i = 0; i < list.Count; i++) {
-                    var handler = list[i];
-                    if (IsHandlerDestroyed(handler)) continue;
-
-                    try {
-                        awaitables.Add(handler.OnSceneExitAsync());
+                        awaitables.Add(invoke(handler));
                     }
                     catch (Exception e) {
                         Debug.LogException(e, handler as MonoBehaviour);
