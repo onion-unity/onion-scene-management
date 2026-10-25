@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Pool;
 using UniSceneManagement = UnityEngine.SceneManagement;
 
-namespace Onion.SceneManagement.Handler {
+namespace Onion.SceneManagement {
     internal sealed class HandlerGroup<T> where T : ISceneHandler {
         private readonly List<T> _normal = new();
         private readonly List<T> _always = new();

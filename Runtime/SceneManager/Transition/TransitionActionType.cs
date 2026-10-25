@@ -1,4 +1,4 @@
-namespace Onion.SceneManagement.Transition {
+namespace Onion.SceneManagement {
     internal enum TransitionActionType {
         None,
         Load,

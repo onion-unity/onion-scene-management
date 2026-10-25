@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Onion.SceneManagement.Setting {
+namespace Onion.SceneManagement {
     public static class SceneManagementSettings {
         public static bool useBootstrap = false;
         internal static SceneReference bootstrapScene = default;

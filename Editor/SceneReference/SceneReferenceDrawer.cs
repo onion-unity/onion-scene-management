@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor
+namespace Onion.SceneManagement
 {
     [CustomPropertyDrawer(typeof(SceneReference))]
     internal sealed class SceneReferenceDrawer : PropertyDrawer {

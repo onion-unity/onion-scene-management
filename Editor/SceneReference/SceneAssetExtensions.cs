@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine.Pool;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     internal static class SceneAssetExtensions {
         public static void AddToBuild(this SceneAsset asset) {
             if (asset == null) {

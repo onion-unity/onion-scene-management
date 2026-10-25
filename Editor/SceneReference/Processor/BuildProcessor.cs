@@ -3,7 +3,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor.Processor {
+namespace Onion.SceneManagement {
     internal class BuildProcessor : IPreprocessBuildWithReport, IPostprocessBuildWithReport {
         public int callbackOrder => 0;
         public void OnPreprocessBuild(BuildReport report) {

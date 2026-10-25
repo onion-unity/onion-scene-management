@@ -1,7 +1,6 @@
-using Onion.SceneManagement.Setting;
 using UnityEditor;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     [CustomEditor(typeof(Placeholder))]
     [CanEditMultipleObjects]
     internal sealed class PlaceholderEditor : UnityEditor.Editor {

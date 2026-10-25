@@ -6,7 +6,7 @@ using System;
 using UnityEditor;
 #endif
 
-namespace Onion.SceneManagement.Setting {
+namespace Onion.SceneManagement {
     /// <summary>
     /// Included in builds through Preloaded Assets, only while a build runs;
     /// in the Editor it is looked up through EditorBuildSettings.

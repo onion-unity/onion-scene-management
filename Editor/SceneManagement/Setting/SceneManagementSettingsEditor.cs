@@ -1,9 +1,8 @@
-using Onion.SceneManagement.Setting;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     [CustomEditor(typeof(SceneManagementSettingsAsset))]
     internal class SceneManagementSettingsEditor : UnityEditor.Editor {
         public override void OnInspectorGUI() {

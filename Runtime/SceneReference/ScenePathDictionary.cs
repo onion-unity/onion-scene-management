@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
-
-#if UNITY_EDITOR
-using Onion.SceneManagement.Editor;
-#endif
-
 namespace Onion.SceneManagement {
     internal static class ScenePathDictionary {
         [Serializable]

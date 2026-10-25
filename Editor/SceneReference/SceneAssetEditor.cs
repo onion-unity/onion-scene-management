@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEditor.AddressableAssets;
 #endif
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SceneAsset))]
     internal class SceneAssetEditor : UnityEditor.Editor {

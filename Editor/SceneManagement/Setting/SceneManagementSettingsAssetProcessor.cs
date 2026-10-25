@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     internal class SceneManagementSettingsAssetProcessor : AssetPostprocessor {
         private const string deletedAssetMessage = "Don't delete the Scene Management Settings asset!\nIt is required for the proper functioning of the Onion Scene Management system.\nA new settings asset has been created to replace the deleted one.";
 

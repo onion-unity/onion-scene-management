@@ -3,9 +3,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
-using Onion.SceneManagement.Setting;
 
-namespace Onion.SceneManagement.Transition {
+namespace Onion.SceneManagement {
     public sealed class Transition {
         // A typical transition has 4-6 actions; the collections grow when needed.
         private const int initialCapacity = 4;

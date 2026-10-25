@@ -1,11 +1,9 @@
 using System.Collections.Generic;
-using Onion.SceneManagement.Setting;
-using Onion.SceneManagement.Utility;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     [InitializeOnLoad]
     internal static class BootstrappedLoad {
         private const string OpenScenesKey = "Onion.SceneManagement.Bootstrap.OpenScenes";

@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Transition {
+namespace Onion.SceneManagement {
     public static class TransitionExtensions {
         // --- Batch Actions ---
         public static Transition Load(this Transition transition, bool activateOnLoad = true)

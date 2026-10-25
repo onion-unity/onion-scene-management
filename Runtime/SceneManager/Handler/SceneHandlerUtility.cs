@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Onion.SceneManagement.Handler.Attributes;
 
-namespace Onion.SceneManagement.Handler {
+namespace Onion.SceneManagement {
     internal static class SceneHandlerUtility {
         private static readonly Dictionary<(Type, SceneHandlerType), bool> _executeAlwaysCache = new();
         private static readonly IDictionary<SceneHandlerType, string> _methodNameCache = new Dictionary<SceneHandlerType, string> {

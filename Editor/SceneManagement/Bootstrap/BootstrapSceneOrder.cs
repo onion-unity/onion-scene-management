@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Onion.SceneManagement.Setting;
 using UnityEditor;
 using UnityEditor.Build;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     /// <summary>
     /// A player always starts with its first enabled scene, so with Use Bootstrap on
     /// that scene must be the Bootstrap scene; nothing can fix the order at runtime.

@@ -3,7 +3,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Onion.SceneManagement.Transition {
+namespace Onion.SceneManagement {
     // fat struct for transition action
     public struct TransitionAction {
         internal TransitionActionType type;

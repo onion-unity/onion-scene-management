@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace Onion.SceneManagement.Editor.Processor {
+namespace Onion.SceneManagement {
     [InitializeOnLoad]
     internal static class PlayModeProcessor {
         static PlayModeProcessor() {

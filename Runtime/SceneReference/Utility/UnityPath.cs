@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace Onion.SceneManagement.Utility {
+namespace Onion.SceneManagement {
     public class UnityPath {
         private const char UnitySeparator = '/';
         private const char WindowsSeparator = '\\';

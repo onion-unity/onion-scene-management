@@ -1,11 +1,10 @@
 using System;
-using Onion.SceneManagement.Setting;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     /// <summary>
     /// Adds the settings to Preloaded Assets only while a build runs, like the Input System does,
     /// so Project Settings aren't changed permanently.

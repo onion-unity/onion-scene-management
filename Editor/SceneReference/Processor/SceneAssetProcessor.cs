@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor.Processor {
+namespace Onion.SceneManagement {
     internal class SceneAssetProcessor : AssetPostprocessor {
         private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths) {
             bool hasChanged = false;

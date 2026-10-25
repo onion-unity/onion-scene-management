@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Utility {
+namespace Onion.SceneManagement {
     internal static class AwaitableEx {
         public static async Awaitable WaitWhile(Func<bool> condition, CancellationToken cancellationToken = default) {
             while (condition()) {

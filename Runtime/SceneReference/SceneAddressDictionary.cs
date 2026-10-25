@@ -2,10 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-#if UNITY_EDITOR
-using Onion.SceneManagement.Editor;
-#endif
-
 namespace Onion.SceneManagement {
     internal static class SceneAddressDictionary {
         [Serializable]

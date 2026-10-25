@@ -1,6 +1,6 @@
 {
     "name": "Onion.SceneManagement.Editor",
-    "rootNamespace": "Onion",
+    "rootNamespace": "Onion.SceneManagement",
     "references": [
         "Onion.SceneManagement.Runtime",
         "Unity.Addressables",

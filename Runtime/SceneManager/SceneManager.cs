@@ -1,12 +1,8 @@
 using System.Collections.Generic;
-using Onion.SceneManagement.Handler;
-using Onion.SceneManagement.Transition;
 using UnityEngine;
 using UnityEngine.Pool;
 using UniSceneManagement = UnityEngine.SceneManagement;
 using UniScene = UnityEngine.SceneManagement.Scene;
-using Onion.SceneManagement.Utility;
-using Onion.SceneManagement.Setting;
 using System;
 
 namespace Onion.SceneManagement {
@@ -129,8 +125,8 @@ namespace Onion.SceneManagement {
 
         public static Awaitable LoadSceneAsync(SceneReference reference, TransitionMode mode = default) {
             return SceneManagementSettings.overlapLoading
-                ? Transition.Transition.Create(reference, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
-                : Transition.Transition.Create(reference, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
+                ? Transition.Create(reference, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
+                : Transition.Create(reference, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync();
         }
 
         public static Awaitable LoadSceneAsync(int buildIndex, TransitionMode mode = default) {
@@ -148,8 +144,8 @@ namespace Onion.SceneManagement {
             }
 
             await (SceneManagementSettings.overlapLoading
-                ? Transition.Transition.Create(references, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
-                : Transition.Transition.Create(references, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync());
+                ? Transition.Create(references, mode).NotifyExit().Load().Unload().NotifyEnter().ExecuteAsync()
+                : Transition.Create(references, mode).NotifyExit().Unload().Load().NotifyEnter().ExecuteAsync());
         }
 
         public static Awaitable LoadScenesAsync(IEnumerable<int> buildIndices, TransitionMode mode = default) {
@@ -244,7 +240,7 @@ namespace Onion.SceneManagement {
             }
 
             // CreateUnload copies the targets, so the pooled set can be released right after.
-            var transition = Transition.Transition.CreateUnload(targets);
+            var transition = Transition.CreateUnload(targets);
 
             await transition
                 .NotifyExit()
@@ -438,7 +434,7 @@ namespace Onion.SceneManagement {
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
             // A handler may await a transition of its own, which must not queue behind this one.
-            Transition.Transition.BeginUserCode();
+            Transition.BeginUserCode();
             try {
                 var list = global ? handlers.asyncEnter.always : handlers.asyncEnter.normal;
                 for (int i = 0; i < list.Count; i++) {
@@ -456,7 +452,7 @@ namespace Onion.SceneManagement {
                 await AwaitAllLogged(awaitables);
             }
             finally {
-                Transition.Transition.EndUserCode();
+                Transition.EndUserCode();
             }
         }
 
@@ -487,7 +483,7 @@ namespace Onion.SceneManagement {
 
             using var pool = ListPool<Awaitable>.Get(out var awaitables);
 
-            Transition.Transition.BeginUserCode();
+            Transition.BeginUserCode();
             try {
                 var list = global ? handlers.asyncExit.always : handlers.asyncExit.normal;
                 for (int i = 0; i < list.Count; i++) {
@@ -505,7 +501,7 @@ namespace Onion.SceneManagement {
                 await AwaitAllLogged(awaitables);
             }
             finally {
-                Transition.Transition.EndUserCode();
+                Transition.EndUserCode();
             }
         }
 

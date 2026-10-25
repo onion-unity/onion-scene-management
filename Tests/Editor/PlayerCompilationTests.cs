@@ -4,7 +4,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Build.Player;
 
-namespace Onion.SceneManagement.Editor.Tests {
+namespace Onion.SceneManagement.Tests {
     // The Editor compiles with UNITY_EDITOR, so editor-only code that leaks into the Runtime
     // assembly only breaks player builds. This compiles the player scripts without building.
     public class PlayerCompilationTests {

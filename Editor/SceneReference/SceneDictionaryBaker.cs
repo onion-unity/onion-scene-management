@@ -2,7 +2,6 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
-using Onion.SceneManagement.Utility;
 using UnityEngine;
 
 
@@ -10,7 +9,7 @@ using UnityEngine;
 using UnityEditor.AddressableAssets;
 #endif
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     internal static class SceneDictionaryBaker {
         internal static void Bake(bool withFiles) {
             try {

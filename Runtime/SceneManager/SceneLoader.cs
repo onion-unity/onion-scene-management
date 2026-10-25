@@ -2,7 +2,6 @@ using UnityEngine;
 using UniScene = UnityEngine.SceneManagement.Scene; 
 using UniSceneManagement = UnityEngine.SceneManagement;
 using UniSceneManager = UnityEngine.SceneManagement.SceneManager;
-using Onion.SceneManagement.Utility;
 
 
 #if ONION_ADDRESSABLES

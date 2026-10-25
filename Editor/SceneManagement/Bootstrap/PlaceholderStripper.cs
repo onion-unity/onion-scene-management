@@ -3,7 +3,7 @@ using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     internal sealed class PlaceholderStripper : IProcessSceneWithReport {
         public int callbackOrder => 0;
 

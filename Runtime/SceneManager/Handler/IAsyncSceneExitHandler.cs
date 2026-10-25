@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Onion.SceneManagement.Handler { 
+namespace Onion.SceneManagement { 
     public interface IAsyncSceneExitHandler : ISceneHandler { 
         Awaitable OnSceneExitAsync();
     }

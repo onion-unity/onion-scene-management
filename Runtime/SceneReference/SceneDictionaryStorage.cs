@@ -1,5 +1,4 @@
 using System.IO;
-using Onion.SceneManagement.Utility;
 using UnityEngine;
 
 namespace Onion.SceneManagement {

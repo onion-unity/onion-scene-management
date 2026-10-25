@@ -1,10 +1,9 @@
 #if UNITY_EDITOR
 
 using System.IO;
-using Onion.SceneManagement.Utility;
 using UnityEngine;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     internal static class SceneDictionaryEditorStorage {
         private readonly static UnityPath userSettingPath 
             = new(Path.Combine(Directory.GetParent(Application.dataPath)!.FullName, "UserSettings"));

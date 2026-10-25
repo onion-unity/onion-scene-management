@@ -1,6 +1,6 @@
 {
     "name": "Onion.SceneManagement.Tests",
-    "rootNamespace": "Onion",
+    "rootNamespace": "Onion.SceneManagement.Tests",
     "references": [
         "Onion.SceneManagement.Runtime",
         "UnityEngine.TestRunner",

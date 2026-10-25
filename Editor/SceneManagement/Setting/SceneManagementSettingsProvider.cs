@@ -1,12 +1,10 @@
 using System;
 using System.IO;
-using Onion.SceneManagement.Setting;
-using Onion.SceneManagement.Utility;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace Onion.SceneManagement.Editor {
+namespace Onion.SceneManagement {
     [InitializeOnLoad]
     internal static class SceneManagementSettingsProvider {
         private static readonly UnityPath settingsDirectory = new("Assets/Settings/");

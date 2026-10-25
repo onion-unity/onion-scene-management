@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Onion.SceneManagement.Transition;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -20,17 +19,17 @@ namespace Onion.SceneManagement.Tests {
         [SetUp]
         public void SetUp() {
             _log.Clear();
-            Transition.Transition.ResetStatics();
+            Transition.ResetStatics();
         }
 
         [TearDown]
         public void TearDown() {
             // A failed test can leave a transition waiting; it must not block the next test.
-            Transition.Transition.ResetStatics();
+            Transition.ResetStatics();
         }
 
-        private static Transition.Transition Create() {
-            return Transition.Transition.Create(Array.Empty<SceneReference>(), keepScenes);
+        private static Transition Create() {
+            return Transition.Create(Array.Empty<SceneReference>(), keepScenes);
         }
 
         private static IEnumerator Await(Awaitable awaitable) {

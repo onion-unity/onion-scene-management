@@ -1,4 +1,4 @@
-namespace Onion.SceneManagement.Handler { 
+namespace Onion.SceneManagement { 
     public interface ISceneExitHandler : ISceneHandler { 
         void OnSceneExit();
     }

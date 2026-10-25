@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Onion.SceneManagement.Utility {
+namespace Onion.SceneManagement {
     internal static class IEnumerableExtensions {
         public static bool IsNullOrEmpty<T>(this IEnumerable<T> enumerable) {
             if (enumerable == null) return true;
