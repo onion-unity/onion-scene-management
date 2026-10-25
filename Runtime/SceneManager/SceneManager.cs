@@ -50,8 +50,6 @@ namespace Onion.SceneManagement {
 
                     if (scene == bootstrapScene) {
                         Bootstrapper.isReady = true;
-
-                        // Debug.Log($"Bootstrap scene '{bootstrapScene.name}' is loaded.");
                     }
                 }
 
@@ -386,7 +384,6 @@ namespace Onion.SceneManagement {
             }
 
             if (SceneManagementSettings.useBootstrap && loader.scene == SceneManagementSettings.bootstrapScene.scene) {
-                // Debug.LogWarning("Cannot unload the bootstrap scene.");
                 return;
             }
 

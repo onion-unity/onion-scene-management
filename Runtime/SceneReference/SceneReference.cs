@@ -191,10 +191,6 @@ namespace Onion.SceneManagement {
 #endif
         }
 
-        public void OnAfterDeserialize() {
-#if UNITY_EDITOR
-
-#endif
-        }
+        public void OnAfterDeserialize() { }
     }
 } 
