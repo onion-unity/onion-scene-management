@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace Onion.SceneManagement {
     // fat struct for transition action
-    public struct TransitionAction {
+    internal struct TransitionAction {
         internal TransitionActionType type;
         
         internal bool batch;
