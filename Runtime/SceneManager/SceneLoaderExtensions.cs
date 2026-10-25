@@ -21,8 +21,9 @@ namespace Onion.SceneManagement {
         }
 
         public static void Unregister(this Scene scene) {
+            // Called after the unload; a scene still loaded means the unload failed (e.g. Addressables).
+            // Keep its loader, or the scene could never be unloaded through the package again.
             if (scene.isLoaded) {
-                // why?
                 return;
             }
 
@@ -33,15 +34,9 @@ namespace Onion.SceneManagement {
             return _loaders.ContainsKey(scene);
         }
 
-        public static bool HasLoader(this SceneReference reference)
-            => HasLoader(reference.scene);
-
         public static bool TryGetLoader(this Scene scene, out SceneLoader loader) {
             return _loaders.TryGetValue(scene, out loader);
         }
-
-        public static bool TryGetLoader(this SceneReference reference, out SceneLoader loader)
-            => TryGetLoader(reference.scene, out loader);
 
         public static SceneLoader GetLoader(this Scene scene) {
             if (TryGetLoader(scene, out var loader)) {
